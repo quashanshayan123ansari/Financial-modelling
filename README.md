@@ -1,6 +1,12 @@
 # 📈 10-Model Financial Suite & Forecasting Dashboard
 
-A production-grade, interactive **10-Model Financial Suite Dashboard** built in Python with **Streamlit**, **Plotly**, **Pandas**, **NumPy**, and **Yahoo Finance (`yfinance`)**.
+[![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/quashanshayan123ansari/Financial-modelling)
+[![Live Web Dashboard](https://img.shields.io/badge/Live-Web_Dashboard-emerald?logo=googlechrome)](https://quashanshayan123ansari.github.io/Financial-modelling/)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
+
+> **Live Interactive Dashboard**: Access the web suite directly via **[GitHub Pages Live Link](https://quashanshayan123ansari.github.io/Financial-modelling/)** or launch locally via Streamlit.
+
+---
 
 The dashboard allows users to input any public company ticker OR upload 5-year annual reports (PDF/CSV) to automatically calculate 10 standard industry financial models across dedicated interactive tabs.
 
