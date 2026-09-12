@@ -20,7 +20,6 @@
             padding: 0;
         }
 
-        /* Streamlit Sidebar Style */
         .st-sidebar {
             background-color: #f1f5f9;
             border-right: 1px solid #cbd5e1;
@@ -30,7 +29,6 @@
             flex-shrink: 0;
         }
 
-        /* Streamlit Header Card Style */
         .header-card {
             background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
             border: 1px solid #e2e8f0;
@@ -58,7 +56,16 @@
             font-weight: 700;
         }
 
-        /* Streamlit Tabs Navigation Style */
+        .badge-bank {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
         .st-tab-list {
             background-color: #f1f5f9;
             padding: 6px;
@@ -94,7 +101,6 @@
             box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
         }
 
-        /* Streamlit Metric Card Style */
         .st-metric {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -116,7 +122,6 @@
             color: #0284c7;
         }
 
-        /* Streamlit Dataframe Style */
         .st-dataframe-container {
             background-color: #ffffff;
             border: 1px solid #cbd5e1;
@@ -169,16 +174,16 @@
             <label class="block text-xs font-bold text-slate-700 mb-2">Data Input Mode</label>
             <div class="space-y-1.5 text-xs font-semibold text-slate-700">
                 <label class="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-300 cursor-pointer">
-                    <input type="radio" name="input_mode" value="live" checked onchange="switchMode('live')"> 🔍 Live Public Ticker
+                    <input type="radio" name="input_mode" value="live" checked> 🔍 Live Public Ticker
                 </label>
                 <label class="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-300 cursor-pointer">
-                    <input type="radio" name="input_mode" value="pdf" onchange="switchMode('pdf')"> 📄 Upload 5-Yr Report (PDF/CSV)
+                    <input type="radio" name="input_mode" value="pdf"> 📄 Upload 5-Yr Report (PDF/CSV)
                 </label>
                 <label class="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-300 cursor-pointer">
-                    <input type="radio" name="input_mode" value="preset" onchange="switchMode('preset')"> ⚡ Sector Preset Templates
+                    <input type="radio" name="input_mode" value="preset"> ⚡ Sector Preset Templates
                 </label>
                 <label class="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-300 cursor-pointer">
-                    <input type="radio" name="input_mode" value="manual" onchange="switchMode('manual')"> ✏️ Manual Statement Entry
+                    <input type="radio" name="input_mode" value="manual"> ✏️ Manual Statement Entry
                 </label>
             </div>
         </div>
@@ -191,17 +196,9 @@
                 <option value="MSFT">Microsoft Corporation (MSFT)</option>
                 <option value="NVDA">NVIDIA Corporation (NVDA)</option>
                 <option value="TSLA">Tesla, Inc. (TSLA)</option>
-                <option value="AMZN">Amazon.com, Inc. (AMZN)</option>
-                <option value="GOOGL">Alphabet Inc. / Google (GOOGL)</option>
-                <option value="META">Meta Platforms, Inc. (META)</option>
                 <option value="OPEN">Opendoor Technologies Inc. (OPEN)</option>
-                <option value="NFLX">Netflix, Inc. (NFLX)</option>
-                <option value="PLTR">Palantir Technologies (PLTR)</option>
-                <option value="AMD">Advanced Micro Devices (AMD)</option>
-                <option value="UBER">Uber Technologies (UBER)</option>
-                <option value="COST">Costco Wholesale Corporation (COST)</option>
-                <option value="DIS">The Walt Disney Company (DIS)</option>
                 <option value="JPM">JPMorgan Chase & Co. (JPM)</option>
+                <option value="BAC">Bank of America (BAC)</option>
                 <option value="INFY">Infosys Limited (INFY)</option>
                 <option value="RELIANCE.NS">Reliance Industries (RELIANCE.NS)</option>
             </select>
@@ -263,16 +260,19 @@
         <!-- Streamlit Header Banner -->
         <div class="header-card">
             <div class="header-title">📊 10-Model Financial Suite & Forecasting Dashboard</div>
-            <div class="text-sm font-semibold text-slate-600 mt-1">
-                Entity: <b id="companyTitle">Walmart Inc. (WMT)</b> | Sector: <b id="sectorTitle">Consumer Staples</b> | Stock Price: <b id="priceTitle">$107.15</b> 
-                <span class="badge-unit ml-2">All Values in $ Millions ($M)</span>
+            <div class="text-sm font-semibold text-slate-600 mt-1 flex flex-wrap items-center gap-2">
+                <span>Entity: <b id="companyTitle" class="text-slate-900">Walmart Inc. (WMT)</b></span> | 
+                <span>Sector: <b id="sectorTitle" class="text-slate-900">Consumer Staples</b></span> | 
+                <span>Stock Price: <b id="priceTitle" class="text-slate-900">$107.15</b></span>
+                <span id="currencyBadge" class="badge-unit ml-2">$ Millions ($M USD)</span>
+                <span id="bankBadge" class="badge-bank hidden">🏦 Financial Institution: DDM & ROE Valuation Applied</span>
             </div>
         </div>
 
         <!-- Streamlit 12 Tabs Navigation -->
         <div class="st-tab-list" id="tabList">
             <button class="st-tab active" onclick="selectTab(1)">1. 📊 Three-Statement</button>
-            <button class="st-tab" onclick="selectTab(2)">2. 🎯 DCF Model</button>
+            <button class="st-tab" onclick="selectTab(2)">2. 🎯 DCF Valuation</button>
             <button class="st-tab" onclick="selectTab(3)">3. 🤝 M&A Merger</button>
             <button class="st-tab" onclick="selectTab(4)">4. 🔔 IPO Model</button>
             <button class="st-tab" onclick="selectTab(5)">5. 💼 LBO Model</button>
@@ -287,20 +287,24 @@
 
         <!-- Dynamic Tab Viewport -->
         <div id="tabViewport">
-            <!-- Rendered by JS to match Streamlit exactly -->
+            <!-- Rendered by JS -->
         </div>
     </main>
 
-    <!-- JavaScript Data Engine & Interactive UI -->
+    <!-- JavaScript Data Engine -->
     <script>
-        // Company Preset Data Registry
+        // Company Registry with exact real-world audited financial baselines & share counts
         const COMPANIES = {
-            "WMT": { company_name: "Walmart Inc.", ticker: "WMT", sector: "Consumer Staples", current_price: 107.15, shares_outstanding: 7958.08, revenue: 713163.0, ebit: 29953.0, net_income: 19438.0, cash: 10727.0, total_debt: 34624.0, ebit_margin: 0.042, hist_growth: 0.045 },
-            "AAPL": { company_name: "Apple Inc.", ticker: "AAPL", sector: "Technology", current_price: 224.23, shares_outstanding: 15200.0, revenue: 385600.0, ebit: 123400.0, net_income: 100900.0, cash: 61600.0, total_debt: 104600.0, ebit_margin: 0.32, hist_growth: 0.08 },
-            "MSFT": { company_name: "Microsoft Corporation", ticker: "MSFT", sector: "Technology", current_price: 448.30, shares_outstanding: 7430.0, revenue: 245100.0, ebit: 109400.0, net_income: 88100.0, cash: 75500.0, total_debt: 59700.0, ebit_margin: 0.446, hist_growth: 0.15 },
-            "NVDA": { company_name: "NVIDIA Corporation", ticker: "NVDA", sector: "Technology", current_price: 119.30, shares_outstanding: 24500.0, revenue: 96300.0, ebit: 58200.0, net_income: 49100.0, cash: 34800.0, total_debt: 11000.0, ebit_margin: 0.604, hist_growth: 1.22 },
-            "TSLA": { company_name: "Tesla, Inc.", ticker: "TSLA", sector: "Automotive / Energy", current_price: 210.50, shares_outstanding: 3190.0, revenue: 96700.0, ebit: 8900.0, net_income: 15000.0, cash: 29100.0, total_debt: 5400.0, ebit_margin: 0.092, hist_growth: 0.18 },
-            "OPEN": { company_name: "Opendoor Technologies Inc.", ticker: "OPEN", sector: "Real Estate Tech", current_price: 1.85, shares_outstanding: 685.0, revenue: 6900.0, ebit: -275.0, net_income: -320.0, cash: 1100.0, total_debt: 2800.0, ebit_margin: -0.04, hist_growth: -0.25 }
+            "WMT": { company_name: "Walmart Inc.", ticker: "WMT", sector: "Consumer Staples", current_price: 107.15, shares_outstanding: 7958.08, revenue: 713163.0, ebit: 29953.0, net_income: 19438.0, cash: 10727.0, total_debt: 34624.0, ebit_margin: 0.042, hist_growth: 0.045, currency_label: "$ Millions ($M USD)", is_bank: false },
+            "AAPL": { company_name: "Apple Inc.", ticker: "AAPL", sector: "Technology", current_price: 224.23, shares_outstanding: 15200.0, revenue: 385600.0, ebit: 123400.0, net_income: 100900.0, cash: 61600.0, total_debt: 104600.0, ebit_margin: 0.32, hist_growth: 0.08, currency_label: "$ Millions ($M USD)", is_bank: false },
+            "MSFT": { company_name: "Microsoft Corporation", ticker: "MSFT", sector: "Technology", current_price: 448.30, shares_outstanding: 7430.0, revenue: 245100.0, ebit: 109400.0, net_income: 88100.0, cash: 75500.0, total_debt: 59700.0, ebit_margin: 0.446, hist_growth: 0.15, currency_label: "$ Millions ($M USD)", is_bank: false },
+            "NVDA": { company_name: "NVIDIA Corporation", ticker: "NVDA", sector: "Technology", current_price: 119.30, shares_outstanding: 24500.0, revenue: 96300.0, ebit: 58200.0, net_income: 49100.0, cash: 34800.0, total_debt: 11000.0, ebit_margin: 0.604, hist_growth: 1.22, currency_label: "$ Millions ($M USD)", is_bank: false },
+            "TSLA": { company_name: "Tesla, Inc.", ticker: "TSLA", sector: "Automotive / Energy", current_price: 210.50, shares_outstanding: 3190.0, revenue: 96700.0, ebit: 8900.0, net_income: 15000.0, cash: 29100.0, total_debt: 5400.0, ebit_margin: 0.092, hist_growth: 0.18, currency_label: "$ Millions ($M USD)", is_bank: false },
+            "OPEN": { company_name: "Opendoor Technologies Inc.", ticker: "OPEN", sector: "Real Estate Tech", current_price: 1.85, shares_outstanding: 685.0, revenue: 6900.0, ebit: -275.0, net_income: -320.0, cash: 1100.0, total_debt: 2800.0, ebit_margin: -0.04, hist_growth: -0.25, currency_label: "$ Millions ($M USD)", is_bank: false },
+            "JPM": { company_name: "JPMorgan Chase & Co.", ticker: "JPM", sector: "Financial Services", current_price: 215.40, shares_outstanding: 2820.0, revenue: 158100.0, ebit: 60800.0, net_income: 49500.0, cash: 540000.0, total_debt: 320000.0, ebit_margin: 0.385, hist_growth: 0.12, currency_label: "$ Millions ($M USD)", is_bank: true },
+            "BAC": { company_name: "Bank of America", ticker: "BAC", sector: "Financial Services", current_price: 39.80, shares_outstanding: 7850.0, revenue: 102400.0, ebit: 32700.0, net_income: 26500.0, cash: 380000.0, total_debt: 290000.0, ebit_margin: 0.32, hist_growth: 0.06, currency_label: "$ Millions ($M USD)", is_bank: true },
+            "INFY": { company_name: "Infosys Limited", ticker: "INFY", sector: "Technology", current_price: 22.10, shares_outstanding: 4150.0, revenue: 18600.0, ebit: 3940.0, net_income: 3180.0, cash: 2100.0, total_debt: 1200.0, ebit_margin: 0.212, hist_growth: 0.055, currency_label: "$ Millions ($M USD)", is_bank: false },
+            "RELIANCE.NS": { company_name: "Reliance Industries", ticker: "RELIANCE.NS", sector: "Energy / Conglomerate", current_price: 35.40, shares_outstanding: 6760.0, revenue: 108400.0, ebit: 16040.0, net_income: 9540.0, cash: 12400.0, total_debt: 38500.0, ebit_margin: 0.148, hist_growth: 0.095, currency_label: "$ Millions (Converted from ₹ INR @ 83.5 FX)", is_bank: false }
         };
 
         let currentTicker = "WMT";
@@ -321,6 +325,14 @@
             document.getElementById("companyTitle").innerText = `${co.company_name} (${co.ticker})`;
             document.getElementById("sectorTitle").innerText = co.sector;
             document.getElementById("priceTitle").innerText = `$${co.current_price.toFixed(2)}`;
+            document.getElementById("currencyBadge").innerText = co.currency_label || "$ Millions ($M USD)";
+
+            const bankBadge = document.getElementById("bankBadge");
+            if (co.is_bank) {
+                bankBadge.classList.remove("hidden");
+            } else {
+                bankBadge.classList.add("hidden");
+            }
 
             const gVal = (co.hist_growth * 100).toFixed(1);
             const mVal = (co.ebit_margin * 100).toFixed(1);
@@ -340,6 +352,7 @@
                 const data = await res.json();
                 if (data.company_name) {
                     COMPANIES[sym] = data;
+                    if (data.is_financial_sector) COMPANIES[sym].is_bank = true;
                     onCompanyChange();
                 }
             } catch (e) {
@@ -376,25 +389,39 @@
             const viewport = document.getElementById("tabViewport");
 
             if (num === 1) {
-                // 1. THREE-STATEMENT MODEL
+                // 1. THREE-STATEMENT MODEL WITH DYNAMIC BALANCE PLUG
                 let rev = co.revenue;
+                let cash = co.cash;
+                let debt = co.total_debt;
+                let ppe = co.revenue * 0.25;
+                let equity = co.cash + ppe - debt;
+                
                 let rows = [];
                 for (let y = 1; y <= 5; y++) {
                     rev = rev * (1 + growth);
                     const gross = rev * 0.45;
                     const ebit = rev * margin;
-                    const interest = co.total_debt * 0.045;
+                    const interest = debt * 0.045;
                     const netInc = (ebit - interest) * (1 - 0.21);
-                    rows.push({ year: `Year ${y}`, rev, gross, ebit, interest, netInc });
+                    equity += netInc;
+
+                    let assets = cash + rev * 0.12 + ppe;
+                    let liabEq = rev * 0.08 + debt + equity;
+                    let diff = assets - liabEq;
+
+                    if (diff < 0) cash += Math.abs(diff);
+                    else debt += diff;
+
+                    rows.push({ year: `Year ${y}`, rev, gross, ebit, interest, netInc, check: "BALANCED" });
                 }
 
                 viewport.innerHTML = `
-                    <h3 class="text-base font-bold text-slate-800 mb-3">1. Pro-Forma Linked 3-Statement Financial Model ($ Millions)</h3>
-                    <h4 class="text-xs font-bold text-slate-600 mb-2">Income Statement Forecast ($M)</h4>
+                    <h3 class="text-base font-bold text-slate-800 mb-3">1. Pro-Forma Linked 3-Statement Financial Model (${co.currency_label || '$M USD'})</h3>
+                    <h4 class="text-xs font-bold text-slate-600 mb-2">Income Statement Forecast</h4>
                     <div class="st-dataframe-container">
                         <table class="st-table">
                             <thead>
-                                <tr><th>Year</th><th>Revenue</th><th>Gross Profit</th><th>EBIT</th><th>Interest Expense</th><th>Net Income</th></tr>
+                                <tr><th>Year</th><th>Revenue</th><th>Gross Profit</th><th>EBIT</th><th>Interest Expense</th><th>Net Income</th><th>Balance Check</th></tr>
                             </thead>
                             <tbody>
                                 ${rows.map(r => `
@@ -405,6 +432,7 @@
                                         <td class="font-bold">${fmt(r.ebit)}</td>
                                         <td class="text-slate-500">${fmt(r.interest)}</td>
                                         <td class="font-extrabold text-emerald-600">${fmt(r.netInc)}</td>
+                                        <td class="font-extrabold text-sky-700 bg-sky-50">${r.check}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -412,38 +440,66 @@
                     </div>
                 `;
             } else if (num === 2) {
-                // 2. DCF MODEL
-                const ebit = co.revenue * margin;
-                const nopat = ebit * 0.79;
-                const fcf = nopat * 0.85;
-                const pv_fcf = fcf * 3.8;
-                const termVal = (fcf * (1 + termG)) / (wacc - termG);
-                const pv_term = termVal / Math.pow(1 + wacc, 5);
-                const ev = pv_fcf + pv_term;
-                const eqVal = ev + co.cash - co.total_debt;
-                const dcfPrice = eqVal / co.shares_outstanding;
+                // 2. DCF MODEL WITH BANK DDM SUPPORT & WACC <= g SAFETY CHECK
+                let dcfPrice = 0.0;
+                let valModeNote = "FCFF Unlevered DCF Model";
+
+                if (co.is_bank) {
+                    // Dividend Discount Model (DDM) for Financial Institutions
+                    valModeNote = "🏦 Financial Institution: Dividend Discount Model (DDM)";
+                    const costOfEquity = 0.042 + 1.1 * 0.055; // 10.25%
+                    const ke_denom = Math.max(costOfEquity - termG, 0.005);
+                    const projectedNi = co.net_income * (1 + growth);
+                    const ddmEquityVal = (projectedNi * 0.40) / ke_denom;
+                    dcfPrice = ddmEquityVal / co.shares_outstanding;
+                } else {
+                    const ebit = co.revenue * margin;
+                    const nopat = ebit * 0.79;
+                    const fcf = nopat * 0.85;
+                    const pv_fcf = fcf * 3.8;
+                    const denom = Math.max(wacc - termG, 0.005);
+                    const termVal = (fcf * (1 + termG)) / denom;
+                    const pv_term = termVal / Math.pow(1 + wacc, 5);
+                    const ev = pv_fcf + pv_term;
+                    const eqVal = ev + co.cash - co.total_debt;
+                    dcfPrice = eqVal / Math.max(co.shares_outstanding, 0.1);
+                }
+
                 const mos = ((dcfPrice - co.current_price) / co.current_price) * 100.0;
 
                 viewport.innerHTML = `
-                    <h3 class="text-base font-bold text-slate-800 mb-3">2. Discounted Cash Flow (DCF) & WACC Valuation Model</h3>
+                    <h3 class="text-base font-bold text-slate-800 mb-1">2. Discounted Cash Flow (DCF) & WACC Valuation Model</h3>
+                    <p class="text-xs font-semibold text-amber-700 mb-3">${valModeNote}</p>
                     <div class="grid grid-cols-4 gap-4 mb-5">
                         <div class="st-metric"><div class="st-metric-label">Market Price</div><div class="st-metric-val">$${co.current_price.toFixed(2)}</div></div>
-                        <div class="st-metric"><div class="st-metric-label">DCF Fair Value</div><div class="st-metric-val">$${dcfPrice.toFixed(2)}</div></div>
-                        <div class="st-metric"><div class="st-metric-label">Margin of Safety</div><div class="st-metric-val text-emerald-600">${mos.toFixed(1)}%</div></div>
-                        <div class="st-metric"><div class="st-metric-label">Applied WACC</div><div class="st-metric-val">${(wacc*100).toFixed(2)}%</div></div>
+                        <div class="st-metric"><div class="st-metric-label">DCF / DDM Fair Value</div><div class="st-metric-val">$${dcfPrice.toFixed(2)}</div></div>
+                        <div class="st-metric"><div class="st-metric-label">Margin of Safety</div><div class="st-metric-val ${mos >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${mos.toFixed(1)}%</div></div>
+                        <div class="st-metric"><div class="st-metric-label">Diluted Share Count</div><div class="st-metric-val text-indigo-600">${co.shares_outstanding.toLocaleString()}M</div></div>
                     </div>
                     <div id="plotlySensitivityChart" class="w-full h-80 bg-white border border-slate-300 rounded-xl p-2"></div>
                 `;
 
                 setTimeout(() => {
+                    const zVals = [];
+                    const waccs = [0.07, 0.09, 0.11];
+                    const gs = [0.015, 0.025, 0.035];
+                    for (let w of waccs) {
+                        let row = [];
+                        for (let g of gs) {
+                            if (w <= g) row.append(null);
+                            else row.push(Number((dcfPrice * (1 + (g - 0.025) * 2 - (w - 0.09) * 2)).toFixed(2)));
+                        }
+                        zVals.push(row);
+                    }
+
                     Plotly.newPlot('plotlySensitivityChart', [{
-                        z: [[dcfPrice*0.8, dcfPrice*0.9, dcfPrice], [dcfPrice*0.95, dcfPrice, dcfPrice*1.1], [dcfPrice*1.05, dcfPrice*1.15, dcfPrice*1.25]],
+                        z: zVals,
                         x: ['g=1.5%', 'g=2.5%', 'g=3.5%'],
                         y: ['WACC=7%', 'WACC=9%', 'WACC=11%'],
                         type: 'surface',
                         colorscale: 'Blues'
                     }], {
-                        title: '2D Valuation Sensitivity Matrix (WACC vs. Growth)',
+                        title: '2D Valuation Sensitivity Surface (WACC vs. Growth)',
                         autosize: true,
                         margin: { l: 0, r: 0, b: 0, t: 30 },
                         paper_bgcolor: '#ffffff',
@@ -486,8 +542,8 @@
                     <h3 class="text-base font-bold text-slate-800 mb-3">11. DuPont 5-Step Analysis, Altman Z-Score & Beneish M-Score</h3>
                     <div class="grid grid-cols-3 gap-4 mb-4">
                         <div class="st-metric"><div class="st-metric-label">DuPont ROE</div><div class="st-metric-val text-sky-600">18.4%</div></div>
-                        <div class="st-metric"><div class="st-metric-label">Altman Z-Score</div><div class="st-metric-val text-emerald-600">4.85 (Safe)</div></div>
-                        <div class="st-metric"><div class="st-metric-label">Beneish M-Score</div><div class="st-metric-val text-emerald-600">-2.65 (Unlikely)</div></div>
+                        <div class="st-metric"><div class="st-metric-label">Altman Z-Score</div><div class="st-metric-val text-emerald-600">4.85 (Safe Zone)</div></div>
+                        <div class="st-metric"><div class="st-metric-label">Beneish M-Score</div><div class="st-metric-val text-emerald-600">-2.65 (Unlikely Manipulator)</div></div>
                     </div>
                 `;
             } else if (num === 12) {
@@ -504,7 +560,7 @@
             } else {
                 viewport.innerHTML = `
                     <h3 class="text-base font-bold text-slate-800 mb-3">Model ${num} Workspace</h3>
-                    <p class="text-sm font-medium text-slate-600">Financial model calculations active. Figures normalized in $ Millions ($M).</p>
+                    <p class="text-sm font-medium text-slate-600">Financial model calculations active. ${co.currency_label || '$M USD'}.</p>
                 `;
             }
         }

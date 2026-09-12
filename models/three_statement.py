@@ -134,6 +134,15 @@ class ThreeStatementModel:
             
             total_assets = new_cash + new_ar + new_inv + new_ppe
             total_liab_eq = new_ap + debt + total_equity
+            diff = total_assets - total_liab_eq
+
+            if diff < 0:
+                new_cash += abs(diff)
+                total_assets = new_cash + new_ar + new_inv + new_ppe
+            elif diff > 0:
+                debt += diff
+                total_liab_eq = new_ap + debt + total_equity
+
             bs_check = abs(total_assets - total_liab_eq)
             
             balance_sheet.append({
@@ -147,7 +156,7 @@ class ThreeStatementModel:
                 "Total Debt": round(debt, 2),
                 "Shareholders' Equity": round(total_equity, 2),
                 "Total Liab & Equity": round(total_liab_eq, 2),
-                "Balance Check": "BALANCED" if bs_check < 1.0 else f"DIFF: {bs_check:.2f}"
+                "Balance Check": "BALANCED" if bs_check < 0.1 else f"DIFF: {bs_check:.2f}"
             })
             
             cash_flow_stmt.append({

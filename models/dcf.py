@@ -120,9 +120,10 @@ class DCFModel:
         df_proj = pd.DataFrame(projections)
         sum_pv_fcf = df_proj["PV of FCF"].sum()
         
-        # Terminal Value - Gordon Growth Method
+        # Terminal Value - Gordon Growth Method (with safety check WACC > g)
         last_ufcf = df_proj.iloc[-1]["UFCF"]
-        tv_gordon = (last_ufcf * (1 + self.terminal_growth_rate)) / (wacc - self.terminal_growth_rate)
+        denom = max(wacc - self.terminal_growth_rate, 0.005)
+        tv_gordon = (last_ufcf * (1 + self.terminal_growth_rate)) / denom
         pv_tv_gordon = tv_gordon / ((1 + wacc) ** 5)
         
         # Terminal Value - Exit Multiple Method
@@ -130,7 +131,7 @@ class DCFModel:
         tv_exit = last_ebitda * self.exit_multiple
         pv_tv_exit = tv_exit / ((1 + wacc) ** 5)
         
-        # Combine (50/50 blend or Gordon)
+        # Combine (50/50 blend)
         ev_gordon = sum_pv_fcf + pv_tv_gordon
         eq_val_gordon = ev_gordon + self.total_cash - self.total_debt
         price_gordon = eq_val_gordon / self.shares_outstanding

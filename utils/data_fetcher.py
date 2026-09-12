@@ -154,7 +154,25 @@ def fetch_financial_data(ticker_symbol: str, provider: str = "SEC_EDGAR_OR_AUTO"
         raw_shares = info.get("sharesOutstanding") or (info.get("marketCap", 0) / current_price if current_price > 0 else 1000000.0)
         beta = info.get("beta") or 1.1
 
-        scale = 1000000.0 if abs(raw_revenue) > 100000 else 1.0
+        # FX Currency Normalization to USD ($M)
+        reporting_currency = (info.get("currency") or "USD").upper()
+        fx_rate = 1.0
+        currency_label = "$ Millions ($M)"
+        
+        if reporting_currency == "INR":
+            fx_rate = 0.012  # 1 INR ~ 0.012 USD
+            currency_label = "$ Millions (Converted from ₹ INR @ 83.5 FX)"
+        elif reporting_currency == "EUR":
+            fx_rate = 1.085
+            currency_label = "$ Millions (Converted from € EUR)"
+        elif reporting_currency == "GBP":
+            fx_rate = 1.28
+            currency_label = "$ Millions (Converted from £ GBP)"
+        elif reporting_currency == "JPY":
+            fx_rate = 0.0065
+            currency_label = "$ Millions (Converted from ¥ JPY)"
+
+        scale = (1000000.0 if abs(raw_revenue) > 100000 else 1.0) / fx_rate
         shares_scale = 1000000.0 if raw_shares > 100000 else 1.0
 
         revenue = raw_revenue / scale
@@ -175,6 +193,7 @@ def fetch_financial_data(ticker_symbol: str, provider: str = "SEC_EDGAR_OR_AUTO"
         cfo = raw_cfo / scale
         capex = raw_capex / scale
         shares = raw_shares / shares_scale
+        current_price_usd = current_price * fx_rate
         market_cap = (info.get("marketCap", raw_shares * current_price)) / scale
 
         hist_growth = 0.08
@@ -189,12 +208,18 @@ def fetch_financial_data(ticker_symbol: str, provider: str = "SEC_EDGAR_OR_AUTO"
         nwc = (ar + inv) - (safe_get(bs, ["Payables And Accrued Expenses", "Accounts Payable"]) / scale)
         nwc_pct_rev = nwc / revenue if revenue != 0 else 0.05
 
+        sector_name = info.get("sector", "General Industry")
+        is_financial_sector = any(kw in sector_name.lower() for kw in ["financial", "bank", "insurance"])
+
         payload = {
             "source": "Standardized Financial Provider",
             "ticker": clean_ticker,
             "company_name": info.get("longName") or info.get("shortName") or TICKER_SUGGESTIONS.get(clean_ticker, clean_ticker),
-            "sector": info.get("sector", "General Industry"),
-            "current_price": float(current_price),
+            "sector": sector_name,
+            "is_financial_sector": is_financial_sector,
+            "reporting_currency": reporting_currency,
+            "currency_label": currency_label,
+            "current_price": float(current_price_usd),
             "market_cap": float(market_cap),
             "shares_outstanding": float(shares),
             "beta": float(beta),
