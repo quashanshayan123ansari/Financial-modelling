@@ -1,0 +1,3 @@
+"""
+Financial Modelling & Forecasting Package
+"""
