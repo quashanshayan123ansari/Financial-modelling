@@ -32,8 +32,9 @@ venv.bak/
 .vscode/
 .idea/
 
-# Streamlit config
-.streamlit/
+# SQLite database cache
+*.db
+scratch/
 
 # Excel / PDF temporary outputs
 *.xlsx

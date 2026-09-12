@@ -1,6 +1,12 @@
 import numpy as np
 import pandas as pd
-from scipy.stats import norm
+import math
+
+def norm_cdf(x):
+    return (1.0 + math.erf(float(x) / math.sqrt(2.0))) / 2.0
+
+def norm_pdf(x):
+    return math.exp(-0.5 * float(x) ** 2) / math.sqrt(2.0 * math.pi)
 
 class OptionPricingModel:
     """
@@ -27,32 +33,32 @@ class OptionPricingModel:
         d2 = d1 - self.sigma * np.sqrt(self.T)
 
         # Call & Put Option Prices
-        call_price = self.S * np.exp(-self.q * self.T) * norm.cdf(d1) - self.K * np.exp(-self.r * self.T) * norm.cdf(d2)
-        put_price = self.K * np.exp(-self.r * self.T) * norm.cdf(-d2) - self.S * np.exp(-self.q * self.T) * norm.cdf(-d1)
+        call_price = self.S * np.exp(-self.q * self.T) * norm_cdf(d1) - self.K * np.exp(-self.r * self.T) * norm_cdf(d2)
+        put_price = self.K * np.exp(-self.r * self.T) * norm_cdf(-d2) - self.S * np.exp(-self.q * self.T) * norm_cdf(-d1)
 
         # Greeks
         # Delta
-        call_delta = np.exp(-self.q * self.T) * norm.cdf(d1)
-        put_delta = -np.exp(-self.q * self.T) * norm.cdf(-d1)
+        call_delta = np.exp(-self.q * self.T) * norm_cdf(d1)
+        put_delta = -np.exp(-self.q * self.T) * norm_cdf(-d1)
 
         # Gamma
-        gamma = (np.exp(-self.q * self.T) * norm.pdf(d1)) / (self.S * self.sigma * np.sqrt(self.T))
+        gamma = (np.exp(-self.q * self.T) * norm_pdf(d1)) / (self.S * self.sigma * np.sqrt(self.T))
 
         # Vega (1% change in volatility)
-        vega = (self.S * np.exp(-self.q * self.T) * norm.pdf(d1) * np.sqrt(self.T)) / 100.0
+        vega = (self.S * np.exp(-self.q * self.T) * norm_pdf(d1) * np.sqrt(self.T)) / 100.0
 
         # Theta (1 day time decay)
-        call_theta = (- (self.S * self.sigma * np.exp(-self.q * self.T) * norm.pdf(d1)) / (2 * np.sqrt(self.T)) 
-                      - self.r * self.K * np.exp(-self.r * self.T) * norm.cdf(d2) 
-                      + self.q * self.S * np.exp(-self.q * self.T) * norm.cdf(d1)) / 365.0
+        call_theta = (- (self.S * self.sigma * np.exp(-self.q * self.T) * norm_pdf(d1)) / (2 * np.sqrt(self.T)) 
+                      - self.r * self.K * np.exp(-self.r * self.T) * norm_cdf(d2) 
+                      + self.q * self.S * np.exp(-self.q * self.T) * norm_cdf(d1)) / 365.0
 
-        put_theta = (- (self.S * self.sigma * np.exp(-self.q * self.T) * norm.pdf(d1)) / (2 * np.sqrt(self.T)) 
-                     + self.r * self.K * np.exp(-self.r * self.T) * norm.cdf(-d2) 
-                     - self.q * self.S * np.exp(-self.q * self.T) * norm.cdf(-d1)) / 365.0
+        put_theta = (- (self.S * self.sigma * np.exp(-self.q * self.T) * norm_pdf(d1)) / (2 * np.sqrt(self.T)) 
+                     + self.r * self.K * np.exp(-self.r * self.T) * norm_cdf(-d2) 
+                     - self.q * self.S * np.exp(-self.q * self.T) * norm_cdf(-d1)) / 365.0
 
         # Rho (1% change in interest rate)
-        call_rho = (self.K * self.T * np.exp(-self.r * self.T) * norm.cdf(d2)) / 100.0
-        put_rho = (-self.K * self.T * np.exp(-self.r * self.T) * norm.cdf(-d2)) / 100.0
+        call_rho = (self.K * self.T * np.exp(-self.r * self.T) * norm_cdf(d2)) / 100.0
+        put_rho = (-self.K * self.T * np.exp(-self.r * self.T) * norm_cdf(-d2)) / 100.0
 
         # Binomial 10-step Tree Option Pricing Approximation
         N = 10
