@@ -95,7 +95,7 @@ def calculate_all_models(req: CalculateRequest):
     lbo_res = lbo.run_lbo()
 
     # 6. SOTP Model
-    sotp = SOTPModel(total_cash=req.cash, total_debt=req.debt, shares_outstanding=req.shares)
+    sotp = SOTPModel(total_cash=req.cash, total_debt=req.debt, shares_outstanding=req.shares, current_market_price=req.price)
     sotp_res = sotp.run_sotp()
 
     # 7. Consolidation Model
@@ -150,23 +150,34 @@ def calculate_all_models(req: CalculateRequest):
             "schedule": lbo_res["schedule"].to_dict(orient="records")
         },
         "sotp": {
+            "gross_segments_ev": sotp_res["gross_segments_ev"],
+            "adjusted_consolidated_ev": sotp_res["adjusted_consolidated_ev"],
             "total_ev": sotp_res["total_ev"],
             "implied_share_price": sotp_res["implied_share_price"],
+            "activist_upside_pct": sotp_res["activist_upside_pct"],
             "segments": sotp_res["sotp_df"].to_dict(orient="records"),
             "summary": sotp_res["summary_df"].to_dict(orient="records")
         },
         "consolidation": {
             "cons_rev": cons_res["cons_rev"],
-            "income": cons_res["income_df"].to_dict(orient="records")
+            "cons_net_income_parent": cons_res["cons_net_income_parent"],
+            "balance_check": cons_res["balance_check"],
+            "income": cons_res["income_df"].to_dict(orient="records"),
+            "balance_sheet": cons_res["balance_sheet_df"].to_dict(orient="records"),
+            "eliminations_ledger": cons_res["eliminations_ledger_df"].to_dict(orient="records")
         },
         "budget": {
             "total_budget": budget_res["total_budget"],
             "total_actual": budget_res["total_actual"],
             "total_variance": budget_res["total_variance_dollar"],
-            "variance_df": budget_res["variance_df"].to_dict(orient="records")
+            "total_variance_pct": budget_res["total_variance_pct"],
+            "variance_df": budget_res["variance_df"].to_dict(orient="records"),
+            "flex_decomposition_df": budget_res["flex_decomposition_df"].to_dict(orient="records")
         },
         "forecasting": {
-            "combined": fc_res["combined_df"].to_dict(orient="records")
+            "combined": fc_res["combined_df"].to_dict(orient="records"),
+            "covenants": fc_res["covenant_summary_df"].to_dict(orient="records"),
+            "risk_analytics": fc_res["risk_analytics"]
         },
         "option_pricing": {
             "call_price": opt_res["call_price"],
