@@ -32,24 +32,24 @@ st.set_page_config(
 st.markdown("""
 <style>
     .stApp {
-        background-color: #0f172a;
-        color: #f8fafc;
+        background-color: #ffffff;
+        color: #0f172a;
         font-family: 'Inter', -apple-system, sans-serif;
     }
     
     .header-card {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 1px solid #e2e8f0;
         border-radius: 20px;
         padding: 24px;
         margin-bottom: 24px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
     }
     
     .header-title {
         font-size: 2.2rem;
         font-weight: 800;
-        background: linear-gradient(90deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+        background: linear-gradient(90deg, #0284c7 0%, #4f46e5 50%, #7c3aed 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
@@ -57,17 +57,24 @@ st.markdown("""
     div[data-testid="stMetricValue"] {
         font-size: 1.8rem !important;
         font-weight: 800 !important;
-        color: #38bdf8 !important;
+        color: #0284c7 !important;
     }
 
     .badge-unit {
-        background: rgba(56, 189, 248, 0.15);
-        color: #38bdf8;
-        border: 1px solid rgba(56, 189, 248, 0.3);
+        background: #f0f9ff;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
         padding: 4px 12px;
         border-radius: 20px;
         font-size: 0.8rem;
         font-weight: 700;
+    }
+
+    /* Light Theme Table & Inputs */
+    .stTable, div[data-testid="stTable"] {
+        background-color: #ffffff !important;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
     }
 </style>
 """, unsafe_allow_html=True)
