@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>10-Financial Models & Forecasting Dashboard</title>
+    <title>Financial Models & Forecasting Dashboard</title>
 
     <!-- Tailwind CSS, Plotly CDN & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -66,41 +66,6 @@
             font-weight: 700;
         }
 
-        .st-tab-list {
-            background-color: #f1f5f9;
-            padding: 6px;
-            border-radius: 16px;
-            border: 1px solid #cbd5e1;
-            display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            margin-bottom: 20px;
-        }
-
-        .st-tab {
-            background-color: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 12px;
-            padding: 8px 16px;
-            font-weight: 800;
-            font-size: 0.85rem;
-            color: #0f172a;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.15s ease;
-        }
-
-        .st-tab:hover {
-            background-color: #e2e8f0;
-        }
-
-        .st-tab.active {
-            background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
-            color: #ffffff;
-            border: 1px solid #0284c7;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
-        }
-
         .st-metric {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -125,17 +90,29 @@
         .st-dataframe-container {
             background-color: #ffffff;
             border: 1px solid #cbd5e1;
-            border-radius: 14px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+            margin-bottom: 24px;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .st-table-wrapper {
+            overflow-x: auto !important;
+            max-width: 100%;
+            width: 100%;
+            display: block;
+            scroll-behavior: smooth;
         }
 
         .st-table {
             width: 100%;
+            min-width: 950px;
             border-collapse: collapse;
             font-size: 0.85rem;
             text-align: left;
+            white-space: nowrap;
         }
 
         .st-table th {
@@ -144,12 +121,15 @@
             font-weight: 800;
             padding: 12px 16px;
             border-bottom: 2px solid #cbd5e1;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .st-table td {
             background-color: #ffffff;
             color: #1e293b;
-            padding: 10px 16px;
+            padding: 11px 16px;
             border-bottom: 1px solid #f1f5f9;
         }
 
@@ -157,9 +137,43 @@
             background-color: #f8fafc;
         }
 
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        /* High-Visibility Custom Horizontal & Vertical Scrollbar for Slide Option */
+        .st-table-wrapper::-webkit-scrollbar, ::-webkit-scrollbar {
+            height: 10px;
+            width: 10px;
+        }
+        .st-table-wrapper::-webkit-scrollbar-track, ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 6px;
+        }
+        .st-table-wrapper::-webkit-scrollbar-thumb, ::-webkit-scrollbar-thumb {
+            background: #0284c7;
+            border-radius: 6px;
+            border: 2px solid #f1f5f9;
+        }
+        .st-table-wrapper::-webkit-scrollbar-thumb:hover, ::-webkit-scrollbar-thumb:hover {
+            background: #0369a1;
+        }
+
+        /* Fullscreen Viewport Mode for "👁️ See" Button */
+        .st-dataframe-container.fullscreen-table {
+            position: fixed !important;
+            top: 10px !important;
+            left: 10px !important;
+            right: 10px !important;
+            bottom: 10px !important;
+            z-index: 99999 !important;
+            background: #ffffff !important;
+            border: 3px solid #0284c7 !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+            height: calc(100vh - 20px) !important;
+            display: flex;
+            flex-direction: column;
+        }
+        .st-dataframe-container.fullscreen-table .st-table-wrapper {
+            flex: 1;
+            max-height: 100%;
+        }
     </style>
 </head>
 <body class="flex min-h-screen">
@@ -257,7 +271,7 @@
     <!-- Main Workspace Content -->
     <main class="flex-1 p-6 space-y-5 overflow-y-auto">
 
-        <!-- Header Banner with Model Dropdown on Top Right -->
+        <!-- Header Banner with Model Dropdown Menu on Top Right -->
         <div class="header-card flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <div class="header-title">📊 Financial Model Suite & Forecasting Dashboard</div>
@@ -269,9 +283,11 @@
                     <span id="bankBadge" class="badge-bank hidden">🏦 Financial Institution: DDM & ROE Valuation Applied</span>
                 </div>
             </div>
-            <div class="flex flex-col items-end gap-1">
-                <label for="modelSelectDropdown" class="text-[11px] font-black text-sky-800 uppercase tracking-wider">Select Model (Dropdown):</label>
-                <select id="modelSelectDropdown" onchange="selectTab(parseInt(this.value))" class="bg-white border-2 border-sky-500 rounded-xl px-3 py-2 text-xs font-black text-slate-900 shadow-md focus:outline-none focus:ring-2 focus:ring-sky-600">
+            <div class="flex flex-col items-end gap-1.5 bg-gradient-to-r from-sky-50 to-indigo-50 p-3.5 rounded-2xl border-2 border-sky-400 shadow-md">
+                <label for="modelSelectDropdown" class="text-xs font-black text-sky-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-layer-group text-sky-600"></i> <span>Select Model (Dropdown):</span>
+                </label>
+                <select id="modelSelectDropdown" onchange="selectTab(parseInt(this.value))" class="bg-white border-2 border-sky-600 rounded-xl px-4 py-2.5 text-xs font-black text-slate-900 shadow-sm focus:outline-none focus:ring-4 focus:ring-sky-300 hover:border-sky-700 cursor-pointer">
                     <option value="1">1. 📊 Three-Statement Model</option>
                     <option value="2">2. 🎯 DCF Valuation Model</option>
                     <option value="3">3. 🤝 M&A Merger Model</option>
@@ -286,22 +302,6 @@
                     <option value="12">12. 📥 Export Excel Package (.xlsx)</option>
                 </select>
             </div>
-        </div>
-
-        <!-- Streamlit 12 Tabs Navigation -->
-        <div class="st-tab-list" id="tabList">
-            <button class="st-tab active" onclick="selectTab(1)">1. 📊 Three-Statement</button>
-            <button class="st-tab" onclick="selectTab(2)">2. 🎯 DCF Model</button>
-            <button class="st-tab" onclick="selectTab(3)">3. 🤝 M&A Merger</button>
-            <button class="st-tab" onclick="selectTab(4)">4. 🔔 IPO Model</button>
-            <button class="st-tab" onclick="selectTab(5)">5. 💼 LBO Model</button>
-            <button class="st-tab" onclick="selectTab(6)">6. 🧩 SOTP Valuation</button>
-            <button class="st-tab" onclick="selectTab(7)">7. 🏢 Consolidation</button>
-            <button class="st-tab" onclick="selectTab(8)">8. 📑 Budget & Variance</button>
-            <button class="st-tab" onclick="selectTab(9)">9. 🔮 Forecasting</button>
-            <button class="st-tab" onclick="selectTab(10)">10. 📉 Option Pricing</button>
-            <button class="st-tab" onclick="selectTab(11)">11. 🩺 Financial Health</button>
-            <button class="st-tab" onclick="selectTab(12)">12. 📥 Export Excel</button>
         </div>
 
         <!-- Dynamic Tab Viewport -->
@@ -387,14 +387,137 @@
             renderTabContent(activeTabNum);
         }
 
+        // Table Interactive Toolbar Functions (Zoom, See, Download, Search & Slide)
+        const tableZoomLevels = {};
+
+        function zoomTable(tid, delta) {
+            if (!tableZoomLevels[tid]) tableZoomLevels[tid] = 1.0;
+            tableZoomLevels[tid] = Math.min(Math.max(0.6, tableZoomLevels[tid] + delta), 1.8);
+            const tbl = document.getElementById(tid);
+            const badge = document.getElementById('zoom_badge_' + tid);
+            if (tbl) {
+                tbl.style.fontSize = `${0.85 * tableZoomLevels[tid]}rem`;
+            }
+            if (badge) {
+                badge.innerText = `${Math.round(tableZoomLevels[tid] * 100)}%`;
+            }
+        }
+
+        function resetZoomTable(tid) {
+            tableZoomLevels[tid] = 1.0;
+            const tbl = document.getElementById(tid);
+            const badge = document.getElementById('zoom_badge_' + tid);
+            if (tbl) {
+                tbl.style.fontSize = '0.85rem';
+            }
+            if (badge) {
+                badge.innerText = '100%';
+            }
+        }
+
+        function filterTableRows(inputEl, tid) {
+            const filter = inputEl.value.toLowerCase();
+            const tbl = document.getElementById(tid);
+            if (!tbl) return;
+            const rows = tbl.querySelectorAll('tbody tr');
+            rows.forEach(r => {
+                const text = r.innerText.toLowerCase();
+                r.style.display = text.includes(filter) ? '' : 'none';
+            });
+        }
+
+        function downloadTableCSV(tid, title) {
+            const tbl = document.getElementById(tid);
+            if (!tbl) return;
+            let csv = [];
+            const rows = tbl.querySelectorAll('tr');
+            rows.forEach(r => {
+                let cols = r.querySelectorAll('th, td');
+                let rowData = [];
+                cols.forEach(c => {
+                    let text = c.innerText.replace(/"/g, '""').trim();
+                    rowData.push(`"${text}"`);
+                });
+                csv.push(rowData.join(','));
+            });
+            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function toggleTableFullscreen(tid) {
+            const container = document.getElementById('container_' + tid);
+            if (container) {
+                container.classList.toggle('fullscreen-table');
+            }
+        }
+
+        function renderTableWithToolbar(tableTitle, headHtml, bodyHtml, customTid = '') {
+            const tid = customTid || 'tbl_' + Math.random().toString(36).substr(2, 9);
+            return `
+                <div class="st-dataframe-container" id="container_${tid}">
+                    <div class="flex flex-wrap justify-between items-center bg-slate-100/90 px-4 py-2.5 border-b border-slate-300 gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                                <i class="fa-solid fa-table-cells text-sky-600"></i> ${tableTitle}
+                            </span>
+                            <span class="text-[10px] font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                ↔️ Slide Option
+                            </span>
+                        </div>
+                        
+                        <div class="flex items-center flex-wrap gap-1.5 text-xs font-bold">
+                            <!-- Search -->
+                            <div class="relative flex items-center">
+                                <i class="fa-solid fa-magnifying-glass absolute left-2 text-slate-400 text-[10px]"></i>
+                                <input type="text" placeholder="Search..." onkeyup="filterTableRows(this, '${tid}')" class="pl-6 pr-2 py-1 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 w-24 md:w-32 bg-white text-slate-800 font-semibold shadow-inner">
+                            </div>
+                            
+                            <!-- Zoom Out -->
+                            <button onclick="zoomTable('${tid}', -0.1)" title="Zoom Out (-)" class="px-2 py-1 bg-white border border-slate-300 hover:bg-slate-200 text-slate-700 rounded-md shadow-sm transition-all flex items-center gap-1">
+                                🔍 <span>-</span>
+                            </button>
+                            <!-- Zoom Badge -->
+                            <button onclick="resetZoomTable('${tid}')" id="zoom_badge_${tid}" title="Reset Zoom to 100%" class="px-2 py-1 bg-sky-50 border border-sky-300 hover:bg-sky-100 text-sky-800 rounded-md text-[11px] font-black shadow-sm transition-all">
+                                100%
+                            </button>
+                            <!-- Zoom In -->
+                            <button onclick="zoomTable('${tid}', 0.1)" title="Zoom In (+)" class="px-2 py-1 bg-white border border-slate-300 hover:bg-slate-200 text-slate-700 rounded-md shadow-sm transition-all flex items-center gap-1">
+                                🔍 <span>+</span>
+                            </button>
+                            
+                            <!-- Download CSV -->
+                            <button onclick="downloadTableCSV('${tid}', '${tableTitle}')" title="Download Table CSV" class="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-md font-extrabold shadow-sm transition-all flex items-center gap-1.5 ml-1">
+                                <i class="fa-solid fa-download"></i> <span>📥 Download</span>
+                            </button>
+                            
+                            <!-- Fullscreen / See expand -->
+                            <button onclick="toggleTableFullscreen('${tid}')" title="See Fullscreen View" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded-md font-extrabold shadow-sm transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-expand"></i> <span>👁️ See</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="st-table-wrapper" id="wrapper_${tid}">
+                        <table class="st-table" id="${tid}">
+                            <thead>${headHtml}</thead>
+                            <tbody>${bodyHtml}</tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
         function selectTab(num) {
             activeTabNum = num;
             const dd = document.getElementById("modelSelectDropdown");
             if (dd) dd.value = num;
-            document.querySelectorAll(".st-tab").forEach((btn, i) => {
-                if (i + 1 === num) btn.classList.add("active");
-                else btn.classList.remove("active");
-            });
             renderTabContent(num);
         }
 
@@ -468,81 +591,54 @@
                 viewport.innerHTML = `
                     <h3 class="text-base font-bold text-slate-800 mb-3">1. Pro-Forma Linked 3-Statement Financial Model (${co.currency_label || '$M USD'})</h3>
                     
-                    <!-- STATEMENT 1: INCOME STATEMENT -->
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">Statement 1: Income Statement Forecast ($M)</h4>
-                    <div class="st-dataframe-container">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Year</th><th>Revenue</th><th>Gross Profit</th><th>OpEx</th><th>D&A</th><th>EBIT</th><th>Interest Expense</th><th>EBT</th><th>Net Income</th></tr>
-                            </thead>
-                            <tbody>
-                                ${incRows.map(r => `
-                                    <tr>
-                                        <td class="font-bold text-slate-800">${r.year}</td>
-                                        <td class="font-bold text-sky-700">${fmt(r.rev)}</td>
-                                        <td class="text-slate-800">${fmt(r.gross)}</td>
-                                        <td class="text-slate-600">${fmt(r.opex)}</td>
-                                        <td class="text-slate-500">${fmt(r.da)}</td>
-                                        <td class="font-bold text-slate-800">${fmt(r.ebit)}</td>
-                                        <td class="text-slate-600">${fmt(r.interest)}</td>
-                                        <td class="text-slate-700">${fmt(r.ebt)}</td>
-                                        <td class="font-extrabold text-emerald-700">${fmt(r.netInc)}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("Statement 1: Income Statement Forecast ($M)", 
+                        `<tr><th>Year</th><th>Revenue</th><th>Gross Profit</th><th>OpEx</th><th>D&A</th><th>EBIT</th><th>Interest Expense</th><th>EBT</th><th>Net Income</th></tr>`,
+                        incRows.map(r => `
+                            <tr>
+                                <td class="font-bold text-slate-800">${r.year}</td>
+                                <td class="font-bold text-sky-700">${fmt(r.rev)}</td>
+                                <td class="text-slate-800">${fmt(r.gross)}</td>
+                                <td class="text-slate-600">${fmt(r.opex)}</td>
+                                <td class="text-slate-500">${fmt(r.da)}</td>
+                                <td class="font-bold text-slate-800">${fmt(r.ebit)}</td>
+                                <td class="text-slate-600">${fmt(r.interest)}</td>
+                                <td class="text-slate-700">${fmt(r.ebt)}</td>
+                                <td class="font-extrabold text-emerald-700">${fmt(r.netInc)}</td>
+                            </tr>
+                        `).join(''), 'inc_stmt_tbl')}
 
-                    <!-- STATEMENT 2: BALANCE SHEET -->
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">Statement 2: Balance Sheet Forecast ($M) (Organic Accounting Equality)</h4>
-                    <div class="st-dataframe-container">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Year</th><th>Cash</th><th>Accounts Rec.</th><th>Inventory</th><th>Net PP&E</th><th>Total Assets</th><th>Accounts Pay.</th><th>Total Debt</th><th>Equity</th><th>Total Liab & Eq</th><th>Check</th></tr>
-                            </thead>
-                            <tbody>
-                                ${bsRows.map(r => `
-                                    <tr>
-                                        <td class="font-bold text-slate-800">${r.year}</td>
-                                        <td class="font-bold text-sky-700">${fmt(r.cash)}</td>
-                                        <td class="text-slate-700">${fmt(r.ar)}</td>
-                                        <td class="text-slate-700">${fmt(r.inv)}</td>
-                                        <td class="text-slate-700">${fmt(r.ppe)}</td>
-                                        <td class="font-extrabold text-slate-900">${fmt(r.assets)}</td>
-                                        <td class="text-slate-600">${fmt(r.ap)}</td>
-                                        <td class="text-slate-700">${fmt(r.debt)}</td>
-                                        <td class="font-bold text-emerald-700">${fmt(r.equity)}</td>
-                                        <td class="font-extrabold text-slate-900">${fmt(r.liabEq)}</td>
-                                        <td class="font-extrabold text-emerald-800 bg-emerald-50">${r.check}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("Statement 2: Balance Sheet Forecast ($M) (Organic Accounting Equality)", 
+                        `<tr><th>Year</th><th>Cash</th><th>Accounts Rec.</th><th>Inventory</th><th>Net PP&E</th><th>Total Assets</th><th>Accounts Pay.</th><th>Total Debt</th><th>Equity</th><th>Total Liab & Eq</th><th>Check</th></tr>`,
+                        bsRows.map(r => `
+                            <tr>
+                                <td class="font-bold text-slate-800">${r.year}</td>
+                                <td class="font-bold text-sky-700">${fmt(r.cash)}</td>
+                                <td class="text-slate-700">${fmt(r.ar)}</td>
+                                <td class="text-slate-700">${fmt(r.inv)}</td>
+                                <td class="text-slate-700">${fmt(r.ppe)}</td>
+                                <td class="font-extrabold text-slate-900">${fmt(r.assets)}</td>
+                                <td class="text-slate-600">${fmt(r.ap)}</td>
+                                <td class="text-slate-700">${fmt(r.debt)}</td>
+                                <td class="font-bold text-emerald-700">${fmt(r.equity)}</td>
+                                <td class="font-extrabold text-slate-900">${fmt(r.liabEq)}</td>
+                                <td class="font-extrabold text-emerald-800 bg-emerald-50">${r.check}</td>
+                            </tr>
+                        `).join(''), 'bs_stmt_tbl')}
 
-                    <!-- STATEMENT 3: CASH FLOW STATEMENT -->
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">Statement 3: Cash Flow Statement Forecast ($M)</h4>
-                    <div class="st-dataframe-container">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Year</th><th>Net Income</th><th>D&A</th><th>CFO</th><th>CapEx (CFI)</th><th>Financing (CFF)</th><th>Net Cash Flow</th><th>Ending Cash</th></tr>
-                            </thead>
-                            <tbody>
-                                ${cfRows.map(r => `
-                                    <tr>
-                                        <td class="font-bold text-slate-800">${r.year}</td>
-                                        <td class="font-bold text-emerald-700">${fmt(r.netInc)}</td>
-                                        <td class="text-slate-600">${fmt(r.da)}</td>
-                                        <td class="font-bold text-sky-700">${fmt(r.cfo)}</td>
-                                        <td class="text-slate-600">${fmt(r.cfi)}</td>
-                                        <td class="text-slate-500">${fmt(r.cff)}</td>
-                                        <td class="font-bold text-slate-800">${fmt(r.netCash)}</td>
-                                        <td class="font-extrabold text-sky-700">${fmt(r.endingCash)}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("Statement 3: Cash Flow Statement Forecast ($M)", 
+                        `<tr><th>Year</th><th>Net Income</th><th>D&A</th><th>CFO</th><th>CapEx (CFI)</th><th>Financing (CFF)</th><th>Net Cash Flow</th><th>Ending Cash</th></tr>`,
+                        cfRows.map(r => `
+                            <tr>
+                                <td class="font-bold text-slate-800">${r.year}</td>
+                                <td class="font-bold text-emerald-700">${fmt(r.netInc)}</td>
+                                <td class="text-slate-600">${fmt(r.da)}</td>
+                                <td class="font-bold text-sky-700">${fmt(r.cfo)}</td>
+                                <td class="text-slate-600">${fmt(r.cfi)}</td>
+                                <td class="text-slate-500">${fmt(r.cff)}</td>
+                                <td class="font-bold text-slate-800">${fmt(r.netCash)}</td>
+                                <td class="font-extrabold text-sky-700">${fmt(r.endingCash)}</td>
+                            </tr>
+                        `).join(''), 'cf_stmt_tbl')}
                 `;
             } else if (num === 2) {
                 // 2. DCF MODEL WITH FULL PROJECTIONS TABLE & MID-YEAR CONVENTION
@@ -598,30 +694,22 @@
                         <div class="st-metric"><div class="st-metric-label">Diluted Share Count</div><div class="st-metric-val text-indigo-700">${co.shares_outstanding.toLocaleString()}M</div></div>
                     </div>
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">5-Year Unlevered Free Cash Flow (UFCF) Projections ($M)</h4>
-                    <div class="st-dataframe-container">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Year</th><th>Period</th><th>Revenue</th><th>Growth %</th><th>EBIT</th><th>NOPAT</th><th>D&A</th><th>CapEx</th><th>UFCF</th><th>PV of FCF</th></tr>
-                            </thead>
-                            <tbody>
-                                ${ufcfRows.map(r => `
-                                    <tr>
-                                        <td class="font-bold text-slate-800">${r.year}</td>
-                                        <td class="text-slate-500 font-semibold">${r.period}</td>
-                                        <td class="font-bold text-sky-700">${fmt(r.rev)}</td>
-                                        <td class="text-slate-700">${r.growth.toFixed(1)}%</td>
-                                        <td class="font-bold text-slate-800">${fmt(r.ebit)}</td>
-                                        <td class="text-slate-700">${fmt(r.nopat)}</td>
-                                        <td class="text-slate-600">${fmt(r.da)}</td>
-                                        <td class="text-slate-600">${fmt(r.capex)}</td>
-                                        <td class="font-extrabold text-emerald-700">${fmt(r.ufcf)}</td>
-                                        <td class="font-bold text-sky-700">${fmt(r.pvFcf)}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("5-Year Unlevered Free Cash Flow (UFCF) Projections ($M)", 
+                        `<tr><th>Year</th><th>Period</th><th>Revenue</th><th>Growth %</th><th>EBIT</th><th>NOPAT</th><th>D&A</th><th>CapEx</th><th>UFCF</th><th>PV of FCF</th></tr>`,
+                        ufcfRows.map(r => `
+                            <tr>
+                                <td class="font-bold text-slate-800">${r.year}</td>
+                                <td class="text-slate-500 font-semibold">${r.period}</td>
+                                <td class="font-bold text-sky-700">${fmt(r.rev)}</td>
+                                <td class="text-slate-700">${r.growth.toFixed(1)}%</td>
+                                <td class="font-bold text-slate-800">${fmt(r.ebit)}</td>
+                                <td class="text-slate-700">${fmt(r.nopat)}</td>
+                                <td class="text-slate-600">${fmt(r.da)}</td>
+                                <td class="text-slate-600">${fmt(r.capex)}</td>
+                                <td class="font-extrabold text-emerald-700">${fmt(r.ufcf)}</td>
+                                <td class="font-bold text-sky-700">${fmt(r.pvFcf)}</td>
+                            </tr>
+                        `).join(''), 'dcf_ufcf_tbl')}
 
                     <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">2D Sensitivity Surface (WACC vs Growth Rate)</h4>
                     <div id="plotlySensitivityChart" class="w-full h-80 bg-white border border-slate-300 rounded-xl p-2"></div>
@@ -700,40 +788,26 @@
                         <div class="st-metric"><div class="st-metric-label">Pre-Tax Breakeven Synergies</div><div class="st-metric-val text-amber-800">${fmt(breakevenSynergies)}</div></div>
                     </div>
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">Pro-Forma Combined Financial & Synergy Breakdown ($M)</h4>
-                    <div class="st-dataframe-container mb-5">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Line Item</th><th>Acquirer (${co.ticker})</th><th>Target Co</th><th>Synergies / Financing Drag</th><th>Pro-Forma Combined</th></tr>
-                            </thead>
-                            <tbody>
-                                ${maTable.map(r => `
-                                    <tr>
-                                        <td class="font-bold text-slate-800">${r.item}</td>
-                                        <td class="font-bold text-sky-700">${r.acquirer}</td>
-                                        <td class="text-slate-700">${r.target}</td>
-                                        <td class="text-emerald-700 font-bold">${r.synergies}</td>
-                                        <td class="font-extrabold text-slate-900">${r.combined}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("Pro-Forma Combined Financial & Synergy Breakdown ($M)", 
+                        `<tr><th>Line Item</th><th>Acquirer (${co.ticker})</th><th>Target Co</th><th>Synergies / Financing Drag</th><th>Pro-Forma Combined</th></tr>`,
+                        maTable.map(r => `
+                            <tr>
+                                <td class="font-bold text-slate-800">${r.item}</td>
+                                <td class="font-bold text-sky-700">${r.acquirer}</td>
+                                <td class="text-slate-700">${r.target}</td>
+                                <td class="text-emerald-700 font-bold">${r.synergies}</td>
+                                <td class="font-extrabold text-slate-900">${r.combined}</td>
+                            </tr>
+                        `).join(''), 'ma_deal_tbl')}
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">Purchase Price Allocation (PPA) & Residual Goodwill</h4>
-                    <div class="st-dataframe-container">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>PPA Step Component</th><th>Amount ($M)</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr><td class="font-bold text-slate-800">Total Equity Purchase Price</td><td class="font-bold text-sky-700">${fmt(purchasePrice)}</td></tr>
-                                <tr><td class="text-slate-700">Fair Value Asset Write-Up (20% Premium)</td><td class="text-amber-800">${fmt(ppaWriteUp)}</td></tr>
-                                <tr><td class="text-slate-700">Annual After-Tax D&A Drag (10-Yr Amortization)</td><td class="text-amber-800">${fmt(daDrag)}</td></tr>
-                                <tr class="bg-sky-50"><td class="font-extrabold text-slate-900">Pro Forma Residual Goodwill Created</td><td class="font-extrabold text-emerald-700">${fmt(goodwill)}</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("Purchase Price Allocation (PPA) & Residual Goodwill", 
+                        `<tr><th>PPA Step Component</th><th>Amount ($M)</th></tr>`,
+                        `
+                            <tr><td class="font-bold text-slate-800">Total Equity Purchase Price</td><td class="font-bold text-sky-700">${fmt(purchasePrice)}</td></tr>
+                            <tr><td class="text-slate-700">Fair Value Asset Write-Up (20% Premium)</td><td class="text-amber-800">${fmt(ppaWriteUp)}</td></tr>
+                            <tr><td class="text-slate-700">Annual After-Tax D&A Drag (10-Yr Amortization)</td><td class="text-amber-800">${fmt(daDrag)}</td></tr>
+                            <tr class="bg-sky-50"><td class="font-extrabold text-slate-900">Pro Forma Residual Goodwill Created</td><td class="font-extrabold text-emerald-700">${fmt(goodwill)}</td></tr>
+                        `, 'ma_ppa_tbl')}
                 `;
             } else if (num === 4) {
                 // 4. IPO MODEL WITH FULL SCENARIOS TABLE, SOURCES & USES, AND CAP TABLE
@@ -775,45 +849,29 @@
                         <div class="st-metric"><div class="st-metric-label">Ownership Dilution %</div><div class="st-metric-val text-amber-800">${dilutionPct.toFixed(1)}%</div></div>
                     </div>
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">IPO Pricing Scenarios & Underwriter Spread ($M)</h4>
-                    <div class="st-dataframe-container mb-5">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Scenario</th><th>Offer Price</th><th>Gross Proceeds</th><th>Underwriter Fee (7%)</th><th>Net Proceeds</th><th>Post-IPO Market Cap</th></tr>
-                            </thead>
-                            <tbody>
-                                ${ipoScenarios.map(r => `
-                                    <tr>
-                                        <td class="font-bold text-slate-800">${r.scenario}</td>
-                                        <td class="font-bold text-sky-700">${r.price}</td>
-                                        <td class="text-slate-700">${r.gross}</td>
-                                        <td class="text-slate-500">${r.fees}</td>
-                                        <td class="font-extrabold text-emerald-700">${r.net}</td>
-                                        <td class="font-bold text-slate-900">${r.mcap}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("IPO Pricing Scenarios & Underwriter Spread ($M)", 
+                        `<tr><th>Scenario</th><th>Offer Price</th><th>Gross Proceeds</th><th>Underwriter Fee (7%)</th><th>Net Proceeds</th><th>Post-IPO Market Cap</th></tr>`,
+                        ipoScenarios.map(r => `
+                            <tr>
+                                <td class="font-bold text-slate-800">${r.scenario}</td>
+                                <td class="font-bold text-sky-700">${r.price}</td>
+                                <td class="text-slate-700">${r.gross}</td>
+                                <td class="text-slate-500">${r.fees}</td>
+                                <td class="font-extrabold text-emerald-700">${r.net}</td>
+                                <td class="font-bold text-slate-900">${r.mcap}</td>
+                            </tr>
+                        `).join(''), 'ipo_scen_tbl')}
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">Sources & Uses of Funds Statement ($M)</h4>
-                    <div class="st-dataframe-container">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Sources of Funds</th><th>Amount ($M)</th><th>Uses of Funds</th><th>Amount ($M)</th></tr>
-                            </thead>
-                            <tbody>
-                                ${sourcesUses.map(r => `
-                                    <tr class="${r.source.includes('Total') ? 'bg-sky-50 font-extrabold' : ''}">
-                                        <td class="font-bold text-slate-800">${r.source}</td>
-                                        <td class="font-bold text-sky-700">${r.sAmt}</td>
-                                        <td class="font-bold text-slate-800">${r.use}</td>
-                                        <td class="font-bold text-emerald-700">${r.uAmt}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("Sources & Uses of Funds Statement ($M)", 
+                        `<tr><th>Sources of Funds</th><th>Amount ($M)</th><th>Uses of Funds</th><th>Amount ($M)</th></tr>`,
+                        sourcesUses.map(r => `
+                            <tr class="${r.source.includes('Total') ? 'bg-sky-50 font-extrabold' : ''}">
+                                <td class="font-bold text-slate-800">${r.source}</td>
+                                <td class="font-bold text-sky-700">${r.sAmt}</td>
+                                <td class="font-bold text-slate-800">${r.use}</td>
+                                <td class="font-bold text-emerald-700">${r.uAmt}</td>
+                            </tr>
+                        `).join(''), 'ipo_su_tbl')}
                 `;
             } else if (num === 5) {
                 // 5. LBO MODEL WITH CFADS DEBT PAYDOWN WATERFALL & VALUE ATTRIBUTION
@@ -857,40 +915,26 @@
                         <div class="st-metric"><div class="st-metric-label">MOIC Multiple</div><div class="st-metric-val text-indigo-700">${moic.toFixed(2)}x</div></div>
                     </div>
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">5-Year CFADS Debt Paydown Waterfall Schedule ($M)</h4>
-                    <div class="st-dataframe-container mb-5">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Year</th><th>EBITDA</th><th>CFADS</th><th>Debt Repayment</th><th>Ending Debt Balance</th><th>Leverage Ratio</th></tr>
-                            </thead>
-                            <tbody>
-                                ${lboRows.map(r => `
-                                    <tr>
-                                        <td class="font-bold text-slate-800">${r.year}</td>
-                                        <td class="font-bold text-sky-700">${fmt(r.ebitda)}</td>
-                                        <td class="text-slate-700">${fmt(r.cfads)}</td>
-                                        <td class="font-bold text-emerald-700">${fmt(r.debtPaid)}</td>
-                                        <td class="font-extrabold text-slate-900">${fmt(r.endingDebt)}</td>
-                                        <td class="font-bold text-indigo-700">${r.leverage}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("5-Year CFADS Debt Paydown Waterfall Schedule ($M)", 
+                        `<tr><th>Year</th><th>EBITDA</th><th>CFADS</th><th>Debt Repayment</th><th>Ending Debt Balance</th><th>Leverage Ratio</th></tr>`,
+                        lboRows.map(r => `
+                            <tr>
+                                <td class="font-bold text-slate-800">${r.year}</td>
+                                <td class="font-bold text-sky-700">${fmt(r.ebitda)}</td>
+                                <td class="text-slate-700">${fmt(r.cfads)}</td>
+                                <td class="font-bold text-emerald-700">${fmt(r.debtPaid)}</td>
+                                <td class="font-extrabold text-slate-900">${fmt(r.endingDebt)}</td>
+                                <td class="font-bold text-indigo-700">${r.leverage}</td>
+                            </tr>
+                        `).join(''), 'lbo_wf_tbl')}
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">Value Creation Attribution ($M)</h4>
-                    <div class="st-dataframe-container">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Value Driver</th><th>Equity Impact ($M)</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr><td class="font-bold text-slate-800">1. Debt Paydown / Deleveraging Effect</td><td class="font-bold text-emerald-700">${fmt(deleveraging)}</td></tr>
-                                <tr><td class="font-bold text-slate-800">2. Operational EBITDA Growth Effect</td><td class="font-bold text-sky-700">${fmt(ebitdaGrowth)}</td></tr>
-                                <tr class="bg-sky-50"><td class="font-extrabold text-slate-900">Total Sponsor Exit Equity Value</td><td class="font-extrabold text-emerald-800">${fmt(exitEquity)}</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("Value Creation Attribution ($M)", 
+                        `<tr><th>Value Driver</th><th>Equity Impact ($M)</th></tr>`,
+                        `
+                            <tr><td class="font-bold text-slate-800">1. Debt Paydown / Deleveraging Effect</td><td class="font-bold text-emerald-700">${fmt(deleveraging)}</td></tr>
+                            <tr><td class="font-bold text-slate-800">2. Operational EBITDA Growth Effect</td><td class="font-bold text-sky-700">${fmt(ebitdaGrowth)}</td></tr>
+                            <tr class="bg-sky-50"><td class="font-extrabold text-slate-900">Total Sponsor Exit Equity Value</td><td class="font-extrabold text-emerald-800">${fmt(exitEquity)}</td></tr>
+                        `, 'lbo_attr_tbl')}
                 `;
             } else if (num === 6) {
                 // 6. SOTP VALUATION MODEL WITH SEGMENT TABLE & EQUITY BRIDGE
@@ -947,43 +991,27 @@
                         <div class="st-metric"><div class="st-metric-label">Activist Upside</div><div class="st-metric-val text-amber-700">${upsidePct >= 0 ? '+' : ''}${upsidePct.toFixed(1)}%</div></div>
                     </div>
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">1. Multi-Segment Valuation & Benchmark Multiples ($M)</h4>
-                    <div class="st-dataframe-container mb-5">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Segment Division</th><th>Segment Metric</th><th>Methodology</th><th>Benchmark Multiple</th><th>Implied Segment EV</th><th>% of Gross EV</th></tr>
-                            </thead>
-                            <tbody>
-                                ${sotpSegments.map(r => `
-                                    <tr>
-                                        <td class="font-bold text-slate-800">${r.segment}</td>
-                                        <td class="text-slate-700">${r.metric}</td>
-                                        <td class="text-slate-500 font-semibold">${r.method}</td>
-                                        <td class="text-slate-600 font-bold">${r.multiple}</td>
-                                        <td class="font-extrabold text-sky-700">${r.ev}</td>
-                                        <td class="font-bold text-slate-800">${r.pct}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("1. Multi-Segment Valuation & Benchmark Multiples ($M)", 
+                        `<tr><th>Segment Division</th><th>Segment Metric</th><th>Methodology</th><th>Benchmark Multiple</th><th>Implied Segment EV</th><th>% of Gross EV</th></tr>`,
+                        sotpSegments.map(r => `
+                            <tr>
+                                <td class="font-bold text-slate-800">${r.segment}</td>
+                                <td class="text-slate-700">${r.metric}</td>
+                                <td class="text-slate-500 font-semibold">${r.method}</td>
+                                <td class="text-slate-600 font-bold">${r.multiple}</td>
+                                <td class="font-extrabold text-sky-700">${r.ev}</td>
+                                <td class="font-bold text-slate-800">${r.pct}</td>
+                            </tr>
+                        `).join(''), 'sotp_seg_tbl')}
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">2. Corporate Drag & Enterprise Value-to-Equity Bridge ($M)</h4>
-                    <div class="st-dataframe-container">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Valuation Line Item</th><th>Value ($M / $)</th></tr>
-                            </thead>
-                            <tbody>
-                                ${bridgeRows.map(r => `
-                                    <tr class="${r.item.includes('Implied SOTP Intrinsic') ? 'bg-emerald-50 font-extrabold text-emerald-900' : (r.item.includes('Activist') ? 'bg-amber-50 font-bold text-amber-900' : '')}">
-                                        <td class="font-bold text-slate-800">${r.item}</td>
-                                        <td class="font-extrabold text-slate-900">${r.val}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("2. Corporate Drag & Enterprise Value-to-Equity Bridge ($M)", 
+                        `<tr><th>Valuation Line Item</th><th>Value ($M / $)</th></tr>`,
+                        bridgeRows.map(r => `
+                            <tr class="${r.item.includes('Implied SOTP Intrinsic') ? 'bg-emerald-50 font-extrabold text-emerald-900' : (r.item.includes('Activist') ? 'bg-amber-50 font-bold text-amber-900' : '')}">
+                                <td class="font-bold text-slate-800">${r.item}</td>
+                                <td class="font-extrabold text-slate-900">${r.val}</td>
+                            </tr>
+                        `).join(''), 'sotp_bridge_tbl')}
                 `;
             } else if (num === 7) {
                 // 7. CONSOLIDATION MODEL WITH BALANCE SHEET & ELIMINATIONS
@@ -1019,26 +1047,18 @@
                         <div class="st-metric"><div class="st-metric-label">Balance Sheet Equilibrium</div><div class="st-metric-val text-emerald-800">$0.00 (BALANCED)</div></div>
                     </div>
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">Multi-Entity Financial Consolidation & Eliminations ($M)</h4>
-                    <div class="st-dataframe-container mb-5">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Financial Line Item</th><th>Parent Co (${co.ticker})</th><th>Sub A (100%)</th><th>Sub B (75% EUR)</th><th>Intercompany Eliminations</th><th>Consolidated Total</th></tr>
-                            </thead>
-                            <tbody>
-                                ${consTable.map(r => `
-                                    <tr class="${r.item.includes('Parent Share') ? 'bg-sky-50 font-extrabold text-sky-950' : ''}">
-                                        <td class="font-bold text-slate-800">${r.item}</td>
-                                        <td class="font-bold text-sky-700">${r.parent}</td>
-                                        <td class="text-slate-700">${r.subA}</td>
-                                        <td class="text-slate-700">${r.subB}</td>
-                                        <td class="text-amber-800 font-bold">${r.elim}</td>
-                                        <td class="font-extrabold text-emerald-700 bg-sky-50">${r.total}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("Multi-Entity Financial Consolidation & Eliminations ($M)", 
+                        `<tr><th>Financial Line Item</th><th>Parent Co (${co.ticker})</th><th>Sub A (100%)</th><th>Sub B (75% EUR)</th><th>Intercompany Eliminations</th><th>Consolidated Total</th></tr>`,
+                        consTable.map(r => `
+                            <tr class="${r.item.includes('Parent Share') ? 'bg-sky-50 font-extrabold text-sky-950' : ''}">
+                                <td class="font-bold text-slate-800">${r.item}</td>
+                                <td class="font-bold text-sky-700">${r.parent}</td>
+                                <td class="text-slate-700">${r.subA}</td>
+                                <td class="text-slate-700">${r.subB}</td>
+                                <td class="text-amber-800 font-bold">${r.elim}</td>
+                                <td class="font-extrabold text-emerald-700 bg-sky-50">${r.total}</td>
+                            </tr>
+                        `).join(''), 'cons_elim_tbl')}
                 `;
             } else if (num === 8) {
                 // 8. BUDGET & VARIANCE MODEL WITH FLEXIBLE BUDGET DECOMPOSITION
@@ -1064,28 +1084,20 @@
                         <div class="st-metric"><div class="st-metric-label">Variance Status</div><div class="st-metric-val text-emerald-800">Favorable Underspend</div></div>
                     </div>
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">Departmental OpEx Budget vs Actual Variance Schedule ($M)</h4>
-                    <div class="st-dataframe-container">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Line Item Cost Center</th><th>Department</th><th>Static Budget</th><th>Actual YTD</th><th>Variance ($M)</th><th>Variance (%)</th><th>Status</th><th>Root Cause Classification</th></tr>
-                            </thead>
-                            <tbody>
-                                ${budgetTable.map(r => `
-                                    <tr>
-                                        <td class="font-bold text-slate-800">${r.line}</td>
-                                        <td class="text-slate-500 font-semibold">${r.dept}</td>
-                                        <td class="font-bold text-slate-700">${r.staticB}</td>
-                                        <td class="font-bold text-sky-700">${r.actual}</td>
-                                        <td class="font-extrabold ${r.varD.includes('-') ? 'text-emerald-700' : 'text-rose-700'}">${r.varD}</td>
-                                        <td class="font-bold ${r.varP.includes('-') ? 'text-emerald-700' : 'text-rose-700'}">${r.varP}</td>
-                                        <td class="font-bold ${r.status.includes('Favorable') ? 'text-emerald-800 bg-emerald-50' : 'text-rose-800 bg-rose-50'}">${r.status}</td>
-                                        <td class="text-slate-600 font-medium">${r.classif}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("Departmental OpEx Budget vs Actual Variance Schedule ($M)", 
+                        `<tr><th>Line Item Cost Center</th><th>Department</th><th>Static Budget</th><th>Actual YTD</th><th>Variance ($M)</th><th>Variance (%)</th><th>Status</th><th>Root Cause Classification</th></tr>`,
+                        budgetTable.map(r => `
+                            <tr>
+                                <td class="font-bold text-slate-800">${r.line}</td>
+                                <td class="text-slate-500 font-semibold">${r.dept}</td>
+                                <td class="font-bold text-slate-700">${r.staticB}</td>
+                                <td class="font-bold text-sky-700">${r.actual}</td>
+                                <td class="font-extrabold ${r.varD.includes('-') ? 'text-emerald-700' : 'text-rose-700'}">${r.varD}</td>
+                                <td class="font-bold ${r.varP.includes('-') ? 'text-emerald-700' : 'text-rose-700'}">${r.varP}</td>
+                                <td class="font-bold ${r.status.includes('Favorable') ? 'text-emerald-800 bg-emerald-50' : 'text-rose-800 bg-rose-50'}">${r.status}</td>
+                                <td class="text-slate-600 font-medium">${r.classif}</td>
+                            </tr>
+                        `).join(''), 'bva_var_tbl')}
                 `;
             } else if (num === 9) {
                 // 9. FORECASTING MODEL WITH CHART, SCENARIOS & COVENANTS TABLE
@@ -1123,46 +1135,30 @@
 
                     <div id="plotlyFcChart" class="w-full h-80 bg-white border border-slate-300 rounded-xl p-2 mb-5"></div>
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">Multi-Scenario Trajectory Revenue Forecast ($M)</h4>
-                    <div class="st-dataframe-container mb-5">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Year</th><th>Base Case</th><th>Bull Case (+6%)</th><th>Bear Case (-5%)</th><th>Tail Stress (-12%)</th></tr>
-                            </thead>
-                            <tbody>
-                                ${fcRows.map(r => `
-                                    <tr>
-                                        <td class="font-bold text-slate-800">${r.year}</td>
-                                        <td class="font-bold text-sky-700">${fmt(r.base)}</td>
-                                        <td class="font-extrabold text-emerald-700">${fmt(r.bull)}</td>
-                                        <td class="font-bold text-amber-800">${fmt(r.bear)}</td>
-                                        <td class="font-extrabold text-rose-700">${fmt(r.stress)}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("Multi-Scenario Trajectory Revenue Forecast ($M)", 
+                        `<tr><th>Year</th><th>Base Case</th><th>Bull Case (+6%)</th><th>Bear Case (-5%)</th><th>Tail Stress (-12%)</th></tr>`,
+                        fcRows.map(r => `
+                            <tr>
+                                <td class="font-bold text-slate-800">${r.year}</td>
+                                <td class="font-bold text-sky-700">${fmt(r.base)}</td>
+                                <td class="font-extrabold text-emerald-700">${fmt(r.bull)}</td>
+                                <td class="font-bold text-amber-800">${fmt(r.bear)}</td>
+                                <td class="font-extrabold text-rose-700">${fmt(r.stress)}</td>
+                            </tr>
+                        `).join(''), 'fc_scen_tbl')}
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">Debt Covenant Compliance Audit ($M)</h4>
-                    <div class="st-dataframe-container">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Scenario Case</th><th>Year 5 Revenue</th><th>Year 5 EBITDA</th><th>Leverage Ratio (Max 3.50x)</th><th>DSCR Ratio (Min 1.25x)</th><th>Covenant Status</th></tr>
-                            </thead>
-                            <tbody>
-                                ${covenantRows.map(r => `
-                                    <tr>
-                                        <td class="font-bold text-slate-800">${r.scenario}</td>
-                                        <td class="text-slate-700">${r.yr5Rev}</td>
-                                        <td class="font-bold text-sky-700">${r.ebitda}</td>
-                                        <td class="font-bold text-slate-800">${r.leverage}</td>
-                                        <td class="font-bold text-indigo-700">${r.dscr}</td>
-                                        <td class="font-bold ${r.status.includes('PASS') ? 'text-emerald-800 bg-emerald-50' : 'text-rose-800 bg-rose-50'}">${r.status}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("Debt Covenant Compliance Audit ($M)", 
+                        `<tr><th>Scenario Case</th><th>Year 5 Revenue</th><th>Year 5 EBITDA</th><th>Leverage Ratio (Max 3.50x)</th><th>DSCR Ratio (Min 1.25x)</th><th>Covenant Status</th></tr>`,
+                        covenantRows.map(r => `
+                            <tr>
+                                <td class="font-bold text-slate-800">${r.scenario}</td>
+                                <td class="text-slate-700">${r.yr5Rev}</td>
+                                <td class="font-bold text-sky-700">${r.ebitda}</td>
+                                <td class="font-bold text-slate-800">${r.leverage}</td>
+                                <td class="font-bold text-indigo-700">${r.dscr}</td>
+                                <td class="font-bold ${r.status.includes('PASS') ? 'text-emerald-800 bg-emerald-50' : 'text-rose-800 bg-rose-50'}">${r.status}</td>
+                            </tr>
+                        `).join(''), 'fc_cov_tbl')}
                 `;
 
                 setTimeout(() => {
@@ -1234,81 +1230,49 @@
                         <div class="st-metric"><div class="st-metric-label">American Put (Tree)</div><div class="st-metric-val text-amber-700">$${amerPut.toFixed(2)}</div></div>
                     </div>
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">1. Black-Scholes vs Cox-Ross-Rubinstein (CRR) Binomial Tree Comparison</h4>
-                    <div class="st-dataframe-container mb-6">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Valuation Model</th><th>Call Option Price ($)</th><th>Put Option Price ($)</th><th>Early Exercise Premium ($)</th></tr>
-                            </thead>
-                            <tbody>
-                                ${modelComp.map(r => `
-                                    <tr class="${r.model.includes('American') ? 'bg-amber-50 font-extrabold' : ''}">
-                                        <td class="font-bold text-slate-800">${r.model}</td>
-                                        <td class="font-extrabold text-sky-700">${r.callPx}</td>
-                                        <td class="font-extrabold text-indigo-700">${r.putPx}</td>
-                                        <td class="font-bold text-emerald-700">${r.earlyPrem}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("1. Black-Scholes vs Cox-Ross-Rubinstein (CRR) Binomial Tree Comparison", 
+                        `<tr><th>Valuation Model</th><th>Call Option Price ($)</th><th>Put Option Price ($)</th><th>Early Exercise Premium ($)</th></tr>`,
+                        modelComp.map(r => `
+                            <tr class="${r.model.includes('American') ? 'bg-amber-50 font-extrabold' : ''}">
+                                <td class="font-bold text-slate-800">${r.model}</td>
+                                <td class="font-extrabold text-sky-700">${r.callPx}</td>
+                                <td class="font-extrabold text-indigo-700">${r.putPx}</td>
+                                <td class="font-bold text-emerald-700">${r.earlyPrem}</td>
+                            </tr>
+                        `).join(''), 'opt_comp_tbl')}
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">2. Option Greeks Sensitivity Matrix</h4>
-                    <div class="st-dataframe-container mb-6">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Greek Metric</th><th>Description</th><th>Call Option Value</th><th>Put Option Value</th></tr>
-                            </thead>
-                            <tbody>
-                                ${greeksTable.map(r => `
-                                    <tr>
-                                        <td class="font-bold text-slate-800">${r.greek}</td>
-                                        <td class="text-slate-600">${r.description}</td>
-                                        <td class="font-extrabold text-sky-700">${r.callVal}</td>
-                                        <td class="font-extrabold text-indigo-700">${r.putVal}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("2. Option Greeks Sensitivity Matrix", 
+                        `<tr><th>Greek Metric</th><th>Description</th><th>Call Option Value</th><th>Put Option Value</th></tr>`,
+                        greeksTable.map(r => `
+                            <tr>
+                                <td class="font-bold text-slate-800">${r.greek}</td>
+                                <td class="text-slate-600">${r.description}</td>
+                                <td class="font-extrabold text-sky-700">${r.callVal}</td>
+                                <td class="font-extrabold text-indigo-700">${r.putVal}</td>
+                            </tr>
+                        `).join(''), 'opt_greeks_tbl')}
 
                     <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">Matrix 1: Stock Price ($S$) vs. Volatility (σ) (Call Option $)</h4>
-                            <div class="st-dataframe-container">
-                                <table class="st-table">
-                                    <thead>
-                                        <tr><th>Spot (S) \\ Vol (σ)</th>${vols.map(v => `<th>${(v*100).toFixed(0)}% Vol</th>`).join('')}</tr>
-                                    </thead>
-                                    <tbody>
-                                        ${spotMults.map((sm, i) => `
-                                            <tr>
-                                                <td class="font-bold text-slate-800">$${(spot*sm).toFixed(1)}</td>
-                                                ${matSens1[i].map(val => `<td class="font-semibold text-slate-700">${val}</td>`).join('')}
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
+                            ${renderTableWithToolbar("Matrix 1: Stock Price ($S$) vs. Volatility (σ) (Call Option $)", 
+                                `<tr><th>Spot (S) \\ Vol (σ)</th>${vols.map(v => `<th>${(v*100).toFixed(0)}% Vol</th>`).join('')}</tr>`,
+                                spotMults.map((sm, i) => `
+                                    <tr>
+                                        <td class="font-bold text-slate-800">$${(spot*sm).toFixed(1)}</td>
+                                        ${matSens1[i].map(val => `<td class="font-semibold text-slate-700">${val}</td>`).join('')}
+                                    </tr>
+                                `).join(''), 'opt_m1_tbl')}
                         </div>
 
                         <div>
-                            <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">Matrix 2: Strike Price ($K$) vs. Maturity (T) (Put Option $)</h4>
-                            <div class="st-dataframe-container">
-                                <table class="st-table">
-                                    <thead>
-                                        <tr><th>Strike (K) \\ Time (T)</th>${mats.map(t => `<th>${t.toFixed(2)} Yrs</th>`).join('')}</tr>
-                                    </thead>
-                                    <tbody>
-                                        ${strikeMults.map((km, i) => `
-                                            <tr>
-                                                <td class="font-bold text-slate-800">$${(strike*km).toFixed(1)}</td>
-                                                ${matSens2[i].map(val => `<td class="font-semibold text-slate-700">${val}</td>`).join('')}
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
+                            ${renderTableWithToolbar("Matrix 2: Strike Price ($K$) vs. Maturity (T) (Put Option $)", 
+                                `<tr><th>Strike (K) \\ Time (T)</th>${mats.map(t => `<th>${t.toFixed(2)} Yrs</th>`).join('')}</tr>`,
+                                strikeMults.map((km, i) => `
+                                    <tr>
+                                        <td class="font-bold text-slate-800">$${(strike*km).toFixed(1)}</td>
+                                        ${matSens2[i].map(val => `<td class="font-semibold text-slate-700">${val}</td>`).join('')}
+                                    </tr>
+                                `).join(''), 'opt_m2_tbl')}
                         </div>
                     </div>
                 `;
@@ -1392,134 +1356,88 @@
                         <div class="st-metric"><div class="st-metric-label">Beneish M-Score</div><div class="st-metric-val text-emerald-700">${mScore.toFixed(2)} (Unlikely)</div></div>
                     </div>
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">1. 5-Step DuPont Return on Equity (ROE) Breakdown</h4>
-                    <div class="st-dataframe-container mb-6">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>DuPont Step Component</th><th>Calculated Ratio</th><th>Financial Impact</th></tr>
-                            </thead>
-                            <tbody>
-                                ${dupontTable.map(r => `
-                                    <tr class="${r.step.includes('DuPont 5-Step') ? 'bg-sky-50 font-extrabold' : ''}">
-                                        <td class="font-bold text-slate-800">${r.step}</td>
-                                        <td class="font-bold text-sky-700">${r.ratio}</td>
-                                        <td class="text-slate-700">${r.impact}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("1. 5-Step DuPont Return on Equity (ROE) Breakdown", 
+                        `<tr><th>DuPont Step Component</th><th>Calculated Ratio</th><th>Financial Impact</th></tr>`,
+                        dupontTable.map(r => `
+                            <tr class="${r.step.includes('DuPont 5-Step') ? 'bg-sky-50 font-extrabold' : ''}">
+                                <td class="font-bold text-slate-800">${r.step}</td>
+                                <td class="font-bold text-sky-700">${r.ratio}</td>
+                                <td class="text-slate-700">${r.impact}</td>
+                            </tr>
+                        `).join(''), 'fh_dupont_tbl')}
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">2. Altman Z-Score & Z''-Score Credit Risk Components</h4>
-                    <div class="st-dataframe-container mb-6">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Altman Model Factor</th><th>Value</th><th>Z-Weight</th><th>Z-Contribution</th><th>Diagnostic Description</th></tr>
-                            </thead>
-                            <tbody>
-                                ${altmanTable.map(r => `
-                                    <tr class="${r.comp.includes('Altman Z') ? 'bg-emerald-50 font-extrabold' : ''}">
-                                        <td class="font-bold text-slate-800">${r.comp}</td>
-                                        <td class="font-bold text-slate-700">${r.val}</td>
-                                        <td class="text-slate-600">${r.weight}</td>
-                                        <td class="font-extrabold text-sky-700">${r.contrib}</td>
-                                        <td class="font-bold text-slate-800">${r.desc}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("2. Altman Z-Score & Z''-Score Credit Risk Components", 
+                        `<tr><th>Altman Model Factor</th><th>Value</th><th>Z-Weight</th><th>Z-Contribution</th><th>Diagnostic Description</th></tr>`,
+                        altmanTable.map(r => `
+                            <tr class="${r.comp.includes('Altman Z') ? 'bg-emerald-50 font-extrabold' : ''}">
+                                <td class="font-bold text-slate-800">${r.comp}</td>
+                                <td class="font-bold text-slate-700">${r.val}</td>
+                                <td class="text-slate-600">${r.weight}</td>
+                                <td class="font-extrabold text-sky-700">${r.contrib}</td>
+                                <td class="font-bold text-slate-800">${r.desc}</td>
+                            </tr>
+                        `).join(''), 'fh_altman_tbl')}
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">3. Beneish 8-Variable Probit M-Score Forensic Indices</h4>
-                    <div class="st-dataframe-container mb-6">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Forensic Index</th><th>Calculated Score</th><th>Benchmark Threshold</th><th>Forensic Interpretation</th></tr>
-                            </thead>
-                            <tbody>
-                                ${beneishTable.map(r => `
-                                    <tr class="${r.idx.includes('Beneish M-Score') ? 'bg-indigo-50 font-extrabold' : ''}">
-                                        <td class="font-bold text-slate-800">${r.idx}</td>
-                                        <td class="font-extrabold text-indigo-700">${r.val}</td>
-                                        <td class="text-slate-600">${r.thresh}</td>
-                                        <td class="text-slate-700">${r.desc}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("3. Beneish 8-Variable Probit M-Score Forensic Indices", 
+                        `<tr><th>Forensic Index</th><th>Calculated Score</th><th>Benchmark Threshold</th><th>Forensic Interpretation</th></tr>`,
+                        beneishTable.map(r => `
+                            <tr class="${r.idx.includes('Beneish M-Score') ? 'bg-indigo-50 font-extrabold' : ''}">
+                                <td class="font-bold text-slate-800">${r.idx}</td>
+                                <td class="font-extrabold text-indigo-700">${r.val}</td>
+                                <td class="text-slate-600">${r.thresh}</td>
+                                <td class="text-slate-700">${r.desc}</td>
+                            </tr>
+                        `).join(''), 'fh_beneish_tbl')}
 
                     <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">Matrix 1: Financial Leverage (Assets/Equity) vs. EBIT Margin (%) (ROE %)</h4>
-                            <div class="st-dataframe-container">
-                                <table class="st-table">
-                                    <thead>
-                                        <tr><th>Leverage \\ EBIT Margin</th>${margins.map(m => `<th>${(m*100).toFixed(1)}%</th>`).join('')}</tr>
-                                    </thead>
-                                    <tbody>
-                                        ${levs.map((l, i) => `
-                                            <tr>
-                                                <td class="font-bold text-slate-800">${l.toFixed(2)}x</td>
-                                                ${matSens1[i].map(val => `<td class="font-semibold text-slate-700">${val}</td>`).join('')}
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
+                            ${renderTableWithToolbar("Matrix 1: Financial Leverage (Assets/Equity) vs. EBIT Margin (%) (ROE %)", 
+                                `<tr><th>Leverage \\ EBIT Margin</th>${margins.map(m => `<th>${(m*100).toFixed(1)}%</th>`).join('')}</tr>`,
+                                levs.map((l, i) => `
+                                    <tr>
+                                        <td class="font-bold text-slate-800">${l.toFixed(2)}x</td>
+                                        ${matSens1[i].map(val => `<td class="font-semibold text-slate-700">${val}</td>`).join('')}
+                                    </tr>
+                                `).join(''), 'fh_m1_tbl')}
                         </div>
 
                         <div>
-                            <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">Matrix 2: WC / Assets (X1) vs. EBIT / Assets (X3) (Altman Z-Score)</h4>
-                            <div class="st-dataframe-container">
-                                <table class="st-table">
-                                    <thead>
-                                        <tr><th>WC/TA (X1) \\ ROA (X3)</th>${x3_vals.map(x3 => `<th>${(x3*100).toFixed(1)}%</th>`).join('')}</tr>
-                                    </thead>
-                                    <tbody>
-                                        ${x1_vals.map((v1, i) => `
-                                            <tr>
-                                                <td class="font-bold text-slate-800">${(v1*100).toFixed(1)}%</td>
-                                                ${matSens2[i].map(val => `<td class="font-semibold text-slate-700">${val}</td>`).join('')}
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
+                            ${renderTableWithToolbar("Matrix 2: WC / Assets (X1) vs. EBIT / Assets (X3) (Altman Z-Score)", 
+                                `<tr><th>WC/TA (X1) \\ ROA (X3)</th>${x3_vals.map(x3 => `<th>${(x3*100).toFixed(1)}%</th>`).join('')}</tr>`,
+                                x1_vals.map((v1, i) => `
+                                    <tr>
+                                        <td class="font-bold text-slate-800">${(v1*100).toFixed(1)}%</td>
+                                        ${matSens2[i].map(val => `<td class="font-semibold text-slate-700">${val}</td>`).join('')}
+                                    </tr>
+                                `).join(''), 'fh_m2_tbl')}
                         </div>
                     </div>
                 `;
             } else if (num === 12) {
                 // 12. EXPORT EXCEL WITH SUMMARY MATRIX
                 viewport.innerHTML = `
-                    <h3 class="text-base font-bold text-slate-800 mb-3">12. Export Full 10-Model Excel Workbook Package</h3>
+                    <h3 class="text-base font-bold text-slate-800 mb-3">12. Export Full Financial Model Excel Workbook Package</h3>
                     <div class="p-6 bg-slate-50 border border-slate-300 rounded-xl text-center mb-5">
-                        <p class="text-sm font-semibold text-slate-700 mb-4">Download complete 10-model financial package with dynamic formulas & audit trail (.xlsx)</p>
+                        <p class="text-sm font-semibold text-slate-700 mb-4">Download complete financial model package with dynamic formulas & audit trail (.xlsx)</p>
                         <button class="bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold px-6 py-3 rounded-lg text-sm transition-all shadow-md">
-                            📥 Download Complete 10-Model Package (.xlsx)
+                            📥 Download Complete Financial Model Package (.xlsx)
                         </button>
                     </div>
 
-                    <h4 class="text-xs font-black text-slate-700 mb-2 uppercase tracking-wider">10 Financial Models Status & Audit Summary</h4>
-                    <div class="st-dataframe-container">
-                        <table class="st-table">
-                            <thead>
-                                <tr><th>Model #</th><th>Financial Model Name</th><th>Primary Output Metric</th><th>Engine Status</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr><td class="font-bold">1</td><td>3-Statement Model</td><td>5-Yr Revenue: ${fmt(co.revenue * Math.pow(1+growth, 5))}</td><td class="text-emerald-700 font-bold">PASSED (BALANCED)</td></tr>
-                                <tr><td class="font-bold">2</td><td>DCF Valuation</td><td>Fair Value: $${(co.current_price * 1.15).toFixed(2)}</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
-                                <tr><td class="font-bold">3</td><td>M&A Merger Model</td><td>Accretion: +8.5% EPS</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
-                                <tr><td class="font-bold">4</td><td>IPO Pricing Model</td><td>Net Proceeds: ${fmt(co.current_price * co.shares_outstanding * 0.2 * 0.93)}</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
-                                <tr><td class="font-bold">5</td><td>LBO Model</td><td>Sponsor IRR: 24.5%</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
-                                <tr><td class="font-bold">6</td><td>SOTP Valuation</td><td>Implied Share Price: $${(co.current_price * 1.12).toFixed(2)}</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
-                                <tr><td class="font-bold">7</td><td>Consolidation Model</td><td>Consolidated Revenue: ${fmt(co.revenue * 1.35)}</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
-                                <tr><td class="font-bold">8</td><td>Budget & Variance</td><td>Variance: +4.0% Favorable</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
-                                <tr><td class="font-bold">9</td><td>Multi-Scenario Forecast</td><td>5-Yr Trajectories (Base/Bull/Bear)</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
-                                <tr><td class="font-bold">10</td><td>Option Pricing Engine</td><td>Black-Scholes Call: $${(co.current_price * 0.12).toFixed(2)}</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    ${renderTableWithToolbar("Financial Models Status & Audit Summary", 
+                        `<tr><th>Model #</th><th>Financial Model Name</th><th>Primary Output Metric</th><th>Engine Status</th></tr>`,
+                        `
+                            <tr><td class="font-bold">1</td><td>3-Statement Model</td><td>5-Yr Revenue: ${fmt(co.revenue * Math.pow(1+growth, 5))}</td><td class="text-emerald-700 font-bold">PASSED (BALANCED)</td></tr>
+                            <tr><td class="font-bold">2</td><td>DCF Valuation</td><td>Fair Value: $${(co.current_price * 1.15).toFixed(2)}</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
+                            <tr><td class="font-bold">3</td><td>M&A Merger Model</td><td>Accretion: +8.5% EPS</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
+                            <tr><td class="font-bold">4</td><td>IPO Pricing Model</td><td>Net Proceeds: ${fmt(co.current_price * co.shares_outstanding * 0.2 * 0.93)}</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
+                            <tr><td class="font-bold">5</td><td>LBO Model</td><td>Sponsor IRR: 24.5%</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
+                            <tr><td class="font-bold">6</td><td>SOTP Valuation</td><td>Implied Share Price: $${(co.current_price * 1.12).toFixed(2)}</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
+                            <tr><td class="font-bold">7</td><td>Consolidation Model</td><td>Consolidated Revenue: ${fmt(co.revenue * 1.35)}</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
+                            <tr><td class="font-bold">8</td><td>Budget & Variance</td><td>Variance: +4.0% Favorable</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
+                            <tr><td class="font-bold">9</td><td>Multi-Scenario Forecast</td><td>5-Yr Trajectories (Base/Bull/Bear)</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
+                            <tr><td class="font-bold">10</td><td>Option Pricing Engine</td><td>Black-Scholes Call: $${(co.current_price * 0.12).toFixed(2)}</td><td class="text-emerald-700 font-bold">PASSED</td></tr>
+                        `, 'excel_export_tbl')}
                 `;
             }
         }
