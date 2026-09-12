@@ -31,19 +31,36 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    .stApp {
-        background-color: #ffffff;
-        color: #0f172a;
+    /* 1. Global Page Background */
+    .stApp, [data-testid="stAppViewContainer"] {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
         font-family: 'Inter', -apple-system, sans-serif;
     }
     
+    /* 2. Sidebar - Slightly darker light gray (#f1f5f9) to differentiate clearly */
+    [data-testid="stSidebar"] {
+        background-color: #f1f5f9 !important;
+        border-right: 1px solid #cbd5e1 !important;
+    }
+    [data-testid="stSidebar"] *, [data-testid="stSidebar"] label, [data-testid="stSidebar"] span, [data-testid="stSidebar"] p, [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+        color: #0f172a !important;
+        font-weight: 600;
+    }
+    [data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"], [data-testid="stSidebar"] input {
+        background-color: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+    
+    /* 3. Header Card */
     .header-card {
         background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         border: 1px solid #e2e8f0;
         border-radius: 20px;
         padding: 24px;
         margin-bottom: 24px;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.04);
     }
     
     .header-title {
@@ -53,11 +70,83 @@ st.markdown("""
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
+
+    .header-subtitle {
+        color: #475569;
+        font-size: 0.95rem;
+    }
     
-    div[data-testid="stMetricValue"] {
+    /* 4. Top Tabs Styling - Crisp & Distinct */
+    div.stTabs [data-baseweb="tab-list"] {
+        background-color: #f1f5f9 !important;
+        padding: 8px;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        gap: 6px;
+    }
+
+    div.stTabs [data-baseweb="tab"] {
+        background-color: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 12px !important;
+        color: #334155 !important;
+        font-weight: 700 !important;
+        font-size: 0.88rem !important;
+        padding: 10px 18px !important;
+    }
+
+    div.stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%) !important;
+        color: #ffffff !important;
+        border: 1px solid #0284c7 !important;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25) !important;
+    }
+    div.stTabs [aria-selected="true"] p, div.stTabs [aria-selected="true"] span {
+        color: #ffffff !important;
+    }
+
+    /* 5. Metrics & Metric Cards */
+    div[data-testid="stMetric"] {
+        background-color: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 16px !important;
+        padding: 14px 18px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+    }
+    div[data-testid="stMetricLabel"] p {
+        color: #475569 !important;
+        font-weight: 700 !important;
+    }
+    div[data-testid="stMetricValue"] div {
         font-size: 1.8rem !important;
-        font-weight: 800 !important;
+        font-weight: 900 !important;
         color: #0284c7 !important;
+    }
+
+    /* 6. Grid Sheets & Data Tables - Pure Light White Styling */
+    div[data-testid="stDataFrame"], div[data-testid="stTable"] {
+        background-color: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 14px !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03) !important;
+    }
+    
+    .stTable table, div[data-testid="stDataFrame"] table {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+    }
+
+    .stTable th, div[data-testid="stDataFrame"] th {
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
+        font-weight: 800 !important;
+        border-bottom: 2px solid #cbd5e1 !important;
+    }
+
+    .stTable td, div[data-testid="stDataFrame"] td {
+        background-color: #ffffff !important;
+        color: #1e293b !important;
+        border-bottom: 1px solid #f1f5f9 !important;
     }
 
     .badge-unit {
@@ -68,13 +157,6 @@ st.markdown("""
         border-radius: 20px;
         font-size: 0.8rem;
         font-weight: 700;
-    }
-
-    /* Light Theme Table & Inputs */
-    .stTable, div[data-testid="stTable"] {
-        background-color: #ffffff !important;
-        border-radius: 12px;
-        border: 1px solid #e2e8f0;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -307,7 +389,7 @@ with tab8:
 with tab9:
     st.subheader("9. Multi-Scenario Time-Series Financial Forecasting Model ($M)")
     fig_fc = px.line(fc_res["combined_df"], x="Year", y="Revenue", color="Scenario", title="5-Year Revenue Forecast Trajectories ($M)")
-    fig_fc.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    fig_fc.update_layout(template="plotly_white", paper_bgcolor='#ffffff', plot_bgcolor='#f8fafc', font=dict(color='#0f172a'))
     st.plotly_chart(fig_fc, use_container_width=True)
 
 # --- TAB 10: OPTION PRICING MODEL ---
