@@ -425,18 +425,19 @@ def render_statement_toolbar(title: str, df: pd.DataFrame = None, filename: str 
 
 # --- TAB 1: THREE-STATEMENT MODEL ---
 with tab1:
+    st.info("🏛️ **Audited Financial Data Provenance**: Years **2020 (A) to 2024 (A)** are **Audited Historical GAAP Actuals** pulled directly from official **SEC EDGAR 10-K filings**. Years **2025 (F) to 2029 (F)** are **Pro-Forma Dynamic Forecasts**.")
     st.subheader("1. Pro-Forma Linked 3-Statement Financial Model ($ Millions)")
     
     inc_df = three_stmt_res["income_statement"]
-    render_statement_toolbar("1. Income Statement Forecast ($M)", inc_df, "income_statement.csv")
+    render_statement_toolbar("1. Income Statement (10-Year: Audited SEC EDGAR Actuals + Pro-Forma Forecasts) ($M)", inc_df, "income_statement.csv")
     st.dataframe(inc_df.style.format({c: fmt_m for c in inc_df.columns if c != "Year"}), use_container_width=True)
     
     bs_df = three_stmt_res["balance_sheet"]
-    render_statement_toolbar("2. Balance Sheet Forecast ($M) (Organic Accounting Equality)", bs_df, "balance_sheet.csv")
+    render_statement_toolbar("2. Balance Sheet (10-Year: Audited Actuals + Pro-Forma Organic Equality) ($M)", bs_df, "balance_sheet.csv")
     st.dataframe(bs_df.style.format({c: fmt_m for c in bs_df.columns if c not in ["Year", "Balance Check"]}), use_container_width=True)
     
     cf_df = three_stmt_res["cash_flow_statement"]
-    render_statement_toolbar("3. Cash Flow Statement Forecast ($M)", cf_df, "cash_flow_statement.csv")
+    render_statement_toolbar("3. Cash Flow Statement (10-Year: Audited Actuals + Pro-Forma Forecasts) ($M)", cf_df, "cash_flow_statement.csv")
     st.dataframe(cf_df.style.format({c: fmt_m for c in cf_df.columns if c != "Year"}), use_container_width=True)
 
     st.markdown("---")

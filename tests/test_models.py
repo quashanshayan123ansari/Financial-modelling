@@ -54,7 +54,7 @@ class TestAllFinancialModels(unittest.TestCase):
             enable_cash_sweep=True
         )
         res = model.run_forecast()
-        self.assertEqual(len(res["income_statement"]), 5)
+        self.assertEqual(len(res["income_statement"]), 10)
         self.assertIn("working_capital_schedule", res)
         self.assertIn("ppe_schedule", res)
         self.assertIn("debt_schedule", res)
