@@ -71,8 +71,9 @@ class ThreeStatementModel:
         
         current_rev = last_rev
         
+        start_year = 2025
         for y in range(1, self.years + 1):
-            year_label = f"Year {y}"
+            year_label = str(start_year + y - 1)
             
             # --- Income Statement ---
             growth = self.rev_growth if isinstance(self.rev_growth, (int, float)) else self.rev_growth[min(y-1, len(self.rev_growth)-1)]

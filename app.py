@@ -178,7 +178,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Sidebar Controls ---
-st.sidebar.title("Financial Model Suite")
+st.sidebar.title("Financial Model")
 
 input_mode = st.sidebar.radio(
     "Data Input Mode",
@@ -304,7 +304,7 @@ exit_mult_slider = st.sidebar.slider("Exit Multiple", 4.0, 30.0, 12.0, 0.5, key=
 # --- Header Card ---
 st.markdown(f"""
 <div class="header-card">
-    <div class="header-title">📊 10-Model Financial Suite & Forecasting Dashboard</div>
+    <div class="header-title">📊 10-Financial Models & Forecasting Dashboard</div>
     <div class="header-subtitle">Entity: <b>{cd.get('company_name', 'N/A')} ({cd.get('ticker', 'N/A')})</b> | Sector: <b>{cd.get('sector', 'N/A')}</b> | Stock Price: <b>${cd.get('current_price', 0):.2f}</b> <span class="badge-unit">All Values in $ Millions ($M)</span></div>
 </div>
 """, unsafe_allow_html=True)

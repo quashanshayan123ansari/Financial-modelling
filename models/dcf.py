@@ -101,7 +101,7 @@ class DCFModel:
             pv_fcf = ufcf / discount_factor
             
             projections.append({
-                "Year": f"Year {i}",
+                "Year": str(2024 + i),
                 "Revenue": round(rev, 2),
                 "Revenue Growth %": round(growth * 100, 2),
                 "EBIT": round(ebit, 2),
