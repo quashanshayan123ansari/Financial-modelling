@@ -181,26 +181,55 @@ input_mode = st.sidebar.radio(
     ["🔍 Live Public Ticker", "📄 Upload 5-Yr Report (PDF/CSV)", "⚡ Sector Preset Templates", "✏️ Manual Statement Entry"]
 )
 
-suggestion_options = [f"{t} - {name}" for t, name in TICKER_SUGGESTIONS.items()] + ["Custom Ticker / Search..."]
+COMPANY_DROPDOWN = {
+    "Walmart Inc. (WMT)": "WMT",
+    "Apple Inc. (AAPL)": "AAPL",
+    "Microsoft Corporation (MSFT)": "MSFT",
+    "NVIDIA Corporation (NVDA)": "NVDA",
+    "Tesla, Inc. (TSLA)": "TSLA",
+    "Amazon.com, Inc. (AMZN)": "AMZN",
+    "Alphabet Inc. / Google (GOOGL)": "GOOGL",
+    "Meta Platforms, Inc. (META)": "META",
+    "Opendoor Technologies Inc. (OPEN)": "OPEN",
+    "Netflix, Inc. (NFLX)": "NFLX",
+    "Palantir Technologies (PLTR)": "PLTR",
+    "Advanced Micro Devices (AMD)": "AMD",
+    "Uber Technologies (UBER)": "UBER",
+    "Costco Wholesale Corporation (COST)": "COST",
+    "The Walt Disney Company (DIS)": "DIS",
+    "JPMorgan Chase & Co. (JPM)": "JPM",
+    "Bank of America Corporation (BAC)": "BAC",
+    "Visa Inc. (V)": "V",
+    "Mastercard Incorporated (MA)": "MA",
+    "The Coca-Cola Company (KO)": "KO",
+    "PepsiCo, Inc. (PEP)": "PEP",
+    "NIKE, Inc. (NKE)": "NKE",
+    "Starbucks Corporation (SBUX)": "SBUX",
+    "Infosys Limited (INFY)": "INFY",
+    "Reliance Industries (RELIANCE.NS)": "RELIANCE.NS",
+    "🔍 Search Other Ticker or Company...": "CUSTOM"
+}
+
+dropdown_options = list(COMPANY_DROPDOWN.keys())
 
 if input_mode == "🔍 Live Public Ticker":
-    ticker_query_input = st.sidebar.text_input("Enter Ticker or Company (e.g. WMT, Walmart, AAPL)", value="WMT")
-    selected_suggestion = st.sidebar.selectbox("Or Quick-Pick Preset Company", suggestion_options, index=0)
+    selected_option = st.sidebar.selectbox("Select Company or Search", dropdown_options, index=0)
     
-    if ticker_query_input and ticker_query_input.strip() != "WMT":
-        ticker_input = ticker_query_input.strip()
-    elif selected_suggestion != "Custom Ticker / Search...":
-        ticker_input = selected_suggestion.split(" - ")[0]
+    if COMPANY_DROPDOWN[selected_option] == "CUSTOM":
+        ticker_input = st.sidebar.text_input("Enter Ticker or Company (e.g. WMT, Walmart, AAPL)", value="WMT")
     else:
-        ticker_input = ticker_query_input.strip()
+        ticker_input = COMPANY_DROPDOWN[selected_option]
 
-    if st.sidebar.button("Fetch Live Financials", type="primary"):
+    do_fetch = st.sidebar.button("Fetch Live Financials", type="primary")
+    
+    if do_fetch or ("current_ticker_loaded" in st.session_state and st.session_state["current_ticker_loaded"] != ticker_input):
         with st.spinner(f"Fetching financials in $ Millions ($M) for {ticker_input}..."):
             fetched = fetch_financial_data(ticker_input)
             if "error" in fetched:
                 st.sidebar.error(fetched["error"])
             else:
                 st.session_state["company_data"] = fetched
+                st.session_state["current_ticker_loaded"] = ticker_input
                 st.sidebar.success(f"Loaded {fetched['company_name']}")
 
 elif input_mode == "📄 Upload 5-Yr Report (PDF/CSV)":
