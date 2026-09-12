@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>10-Model 3D Financial Suite & Forecasting Dashboard</title>
 
+    <!-- Tailwind CSS, Plotly CDN & Three.js CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -14,8 +15,13 @@
     <style>
         body {
             font-family: 'Outfit', -apple-system, sans-serif;
-            background-color: #030712;
-            color: #f3f4f6;
+            background-color: #ffffff;
+            /* Financial Spreadsheet Grid Pattern */
+            background-image: 
+                linear-gradient(to right, rgba(203, 213, 225, 0.5) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(203, 213, 225, 0.5) 1px, transparent 1px);
+            background-size: 32px 32px;
+            color: #0f172a;
             overflow-x: hidden;
             perspective: 1200px;
         }
@@ -28,50 +34,444 @@
             height: 100vh;
             z-index: -1;
             pointer-events: none;
+            background: transparent;
         }
 
-        .card-3d {
-            background: linear-gradient(135deg, rgba(31, 41, 55, 0.7) 0%, rgba(17, 24, 39, 0.85) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(16px);
-            border-radius: 24px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        /* Clean White Cards */
+        .card-white {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
+            transition: transform 0.15s ease-out, box-shadow 0.2s ease;
             transform-style: preserve-3d;
         }
 
-        .tab-3d {
-            padding: 12px 22px;
-            border-radius: 16px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            color: #9ca3af;
-            white-space: nowrap;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .card-white:hover {
+            box-shadow: 0 20px 45px rgba(2, 132, 199, 0.1), 0 2px 6px rgba(15, 23, 42, 0.05);
         }
 
-        .tab-3d.active {
-            background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
-            color: #ffffff;
-            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.4);
+        /* Darker Light-Slate Sidebar Panel for clear differentiation from White Grid */
+        .sidebar-panel {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
         }
+
+        /* Tab Buttons */
+        .tab-btn {
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 0.82rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #334155;
+            white-space: nowrap;
+            background: #e2e8f0;
+            border: 1px solid #cbd5e1;
+        }
+
+        .tab-btn:hover {
+            background: #cbd5e1;
+            color: #0f172a;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+            color: #ffffff;
+            box-shadow: 0 6px 18px rgba(2, 132, 199, 0.35);
+            border: 1px solid #0284c7;
+            transform: translateY(-2px);
+        }
+
+        .gradient-title {
+            background: linear-gradient(90deg, #0284c7 0%, #2563eb 50%, #4f46e5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-4 space-y-4">
+
+    <!-- 3D Background Mesh Canvas -->
     <canvas id="webgl3d"></canvas>
-    <header class="card-3d p-6 flex flex-wrap items-center justify-between gap-4">
+
+    <!-- Header Card -->
+    <header class="card-white p-6 flex flex-wrap items-center justify-between gap-4" id="headerCard">
         <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white text-3xl">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white text-3xl shadow-lg shadow-sky-500/25 border border-white">
                 <i class="fa-solid fa-cube"></i>
             </div>
             <div>
-                <h1 class="text-3xl font-black text-sky-400">10-Model 3D Financial Suite & Dashboard</h1>
-                <p class="text-xs text-slate-400">Node.js WebGL Engine | Figures in $ Millions ($M)</p>
+                <h1 class="text-3xl font-black gradient-title">10-Model 3D Financial Suite & Forecasting Dashboard</h1>
+                <p class="text-xs text-slate-600 font-semibold mt-1">
+                    Entity: <span id="companyNameLabel" class="font-extrabold text-sky-700">Walmart Inc. (WMT)</span> | 
+                    Price: <span id="priceLabel" class="font-extrabold text-emerald-700">$107.15</span> | 
+                    <span class="bg-sky-100 text-sky-800 px-2.5 py-0.5 rounded-full border border-sky-300 font-bold">$ Millions ($M)</span>
+                </p>
             </div>
         </div>
+
+        <div class="flex items-center gap-3">
+            <div class="relative">
+                <input type="text" id="tickerSearchInput" list="tickerSuggestions" placeholder="Type Ticker (e.g. WMT, AAPL, TSLA, OPEN)" class="bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 w-72 shadow-sm">
+                <datalist id="tickerSuggestions">
+                    <option value="WMT">Walmart Inc. (WMT)</option>
+                    <option value="AAPL">Apple Inc. (AAPL)</option>
+                    <option value="MSFT">Microsoft Corporation (MSFT)</option>
+                    <option value="NVDA">NVIDIA Corporation (NVDA)</option>
+                    <option value="TSLA">Tesla, Inc. (TSLA)</option>
+                    <option value="OPEN">Opendoor Technologies (OPEN)</option>
+                    <option value="AMZN">Amazon.com (AMZN)</option>
+                    <option value="GOOGL">Alphabet Inc. (GOOGL)</option>
+                    <option value="META">Meta Platforms (META)</option>
+                </datalist>
+            </div>
+            <button onclick="fetchTickerData()" class="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-extrabold px-6 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-sky-500/20 flex items-center gap-2">
+                <i class="fa-solid fa-magnifying-glass"></i> Fetch Ticker
+            </button>
+        </div>
     </header>
-    <div class="flex-1 glass-card p-6">
-        <p class="text-slate-300">3D WebGL Dashboard compiled successfully.</p>
+
+    <!-- Main Workspace Layout -->
+    <div class="flex-1 flex flex-col md:flex-row gap-5">
+
+        <!-- Sidebar Drivers Panel (Darker slate for contrast against white grid) -->
+        <aside class="w-full md:w-80 sidebar-panel p-6 space-y-6" id="sidebarCard">
+            <div class="flex items-center justify-between border-b border-slate-300 pb-3">
+                <h2 class="text-xs font-black uppercase tracking-wider text-sky-800 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> Forecast Drivers
+                </h2>
+                <span class="text-[10px] font-extrabold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full border border-blue-300">Live API</span>
+            </div>
+
+            <div class="space-y-4 text-xs font-bold">
+                <div>
+                    <div class="flex justify-between mb-1 text-slate-700">
+                        <span>Revenue Growth Rate (%)</span>
+                        <span id="growthVal" class="text-sky-700 font-extrabold">4.5%</span>
+                    </div>
+                    <input type="range" id="growthSlider" min="-30" max="40" value="4.5" step="0.5" class="w-full accent-sky-600">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1 text-slate-700">
+                        <span>EBIT Margin (%)</span>
+                        <span id="marginVal" class="text-sky-700 font-extrabold">4.2%</span>
+                    </div>
+                    <input type="range" id="marginSlider" min="-30" max="50" value="4.2" step="0.5" class="w-full accent-sky-600">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1 text-slate-700">
+                        <span>WACC Rate (%)</span>
+                        <span id="waccVal" class="text-sky-700 font-extrabold">7.5%</span>
+                    </div>
+                    <input type="range" id="waccSlider" min="4" max="18" value="7.5" step="0.25" class="w-full accent-sky-600">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1 text-slate-700">
+                        <span>Terminal Growth (%)</span>
+                        <span id="termVal" class="text-sky-700 font-extrabold">2.5%</span>
+                    </div>
+                    <input type="range" id="termSlider" min="0.5" max="5" value="2.5" step="0.1" class="w-full accent-sky-600">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-1 text-slate-700">
+                        <span>Exit EBITDA Multiple</span>
+                        <span id="exitVal" class="text-sky-700 font-extrabold">12.0x</span>
+                    </div>
+                    <input type="range" id="exitSlider" min="4" max="30" value="12" step="0.5" class="w-full accent-sky-600">
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-300">
+                <button onclick="recalculateModels()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black py-3 rounded-xl text-sm transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-calculator"></i> Recalculate 10 Models
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 card-white p-6 flex flex-col space-y-5" id="mainWorkspace">
+            <!-- 10 Model Tab Navigation -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-3 border-b border-slate-200" id="tabContainer">
+                <button class="tab-btn active" onclick="switchTab(1)">1. 📊 3-Statement</button>
+                <button class="tab-btn" onclick="switchTab(2)">2. 🎯 DCF Valuation</button>
+                <button class="tab-btn" onclick="switchTab(3)">3. 🤝 M&A Merger</button>
+                <button class="tab-btn" onclick="switchTab(4)">4. 🔔 IPO Model</button>
+                <button class="tab-btn" onclick="switchTab(5)">5. 💼 LBO Model</button>
+                <button class="tab-btn" onclick="switchTab(6)">6. 🧩 SOTP Valuation</button>
+                <button class="tab-btn" onclick="switchTab(7)">7. 🏢 Consolidation</button>
+                <button class="tab-btn" onclick="switchTab(8)">8. 📑 Budget & Variance</button>
+                <button class="tab-btn" onclick="switchTab(9)">9. 🔮 Forecasting</button>
+                <button class="tab-btn" onclick="switchTab(10)">10. 📉 Option Pricing</button>
+            </div>
+
+            <!-- Tab Viewport -->
+            <div class="flex-1 overflow-y-auto" id="tabContent">
+                <div class="text-center py-20 text-slate-500">
+                    <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-3 text-sky-600"></i>
+                    <p class="font-bold text-base">Loading 10 Financial Models & Data...</p>
+                </div>
+            </div>
+        </main>
     </div>
+
+    <!-- JavaScript & Interactive Engine -->
+    <script>
+        // --- 1. Three.js Background Wireframe Canvas ---
+        const canvas = document.getElementById('webgl3d');
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 35;
+
+        const group3d = new THREE.Group();
+        scene.add(group3d);
+
+        const geometryCube = new THREE.BoxGeometry(2, 2, 2);
+        for (let i = 0; i < 20; i++) {
+            const matCube = new THREE.MeshPhongMaterial({
+                color: i % 2 === 0 ? 0x0284c7 : 0x4f46e5,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.25
+            });
+            const mesh = new THREE.Mesh(geometryCube, matCube);
+            mesh.position.set((Math.random() - 0.5) * 50, (Math.random() - 0.5) * 50, (Math.random() - 0.5) * 30);
+            group3d.add(mesh);
+        }
+
+        const lightDir = new THREE.DirectionalLight(0x0284c7, 1.2);
+        lightDir.position.set(10, 20, 20);
+        scene.add(lightDir);
+        scene.add(new THREE.AmbientLight(0x94a3b8, 0.8));
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            group3d.rotation.x += 0.0015;
+            group3d.rotation.y += 0.002;
+            renderer.render(scene, camera);
+        }
+        animate3D();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- 2. Dashboard Integration Logic ---
+        let currentTabData = null;
+        let activeTab = 1;
+
+        const sliderIds = ["growth", "margin", "wacc", "term", "exit"];
+        sliderIds.forEach(id => {
+            const el = document.getElementById(id + "Slider");
+            const valEl = document.getElementById(id + "Val");
+            el.addEventListener("input", (e) => {
+                valEl.innerText = e.target.value + (id === "exit" ? "x" : "%");
+            });
+        });
+
+        function fmt(val) {
+            if (val === undefined || val === null || isNaN(val)) return "$0.00M";
+            if (typeof val === "number") {
+                return `$${val.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M`;
+            }
+            return String(val);
+        }
+
+        let activeCompany = {
+            ticker: "WMT",
+            company_name: "Walmart Inc.",
+            revenue: 713163.0,
+            current_price: 107.15,
+            shares_outstanding: 7958.08,
+            cash: 10727.0,
+            total_debt: 34624.0,
+            ebit_margin: 0.042,
+            hist_growth: 0.045
+        };
+
+        async function recalculateModels() {
+            const reqData = {
+                revenue: activeCompany.revenue || 713163.0,
+                growth: parseFloat(document.getElementById("growthSlider").value) / 100.0,
+                ebit_margin: parseFloat(document.getElementById("marginSlider").value) / 100.0,
+                tax_rate: 0.21, da_pct: 0.03, capex_pct: 0.04, nwc_pct: 0.05,
+                cash: activeCompany.cash || 10727.0,
+                debt: activeCompany.total_debt || 34624.0,
+                shares: activeCompany.shares_outstanding || 7958.08,
+                price: activeCompany.current_price || 107.15,
+                wacc: parseFloat(document.getElementById("waccSlider").value) / 100.0,
+                terminal_growth: parseFloat(document.getElementById("termSlider").value) / 100.0,
+                exit_multiple: parseFloat(document.getElementById("exitSlider").value)
+            };
+
+            try {
+                const res = await fetch("/api/calculate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(reqData)
+                });
+                currentTabData = await res.json();
+                renderTab(activeTab);
+            } catch (e) {
+                console.error("API error", e);
+            }
+        }
+
+        async function fetchTickerData() {
+            const sym = document.getElementById("tickerSearchInput").value || "WMT";
+            try {
+                const res = await fetch(`/api/ticker?symbol=${sym}`);
+                const data = await res.json();
+                if (data.company_name) {
+                    activeCompany = data;
+                    document.getElementById("companyNameLabel").innerText = `${data.company_name} (${data.ticker})`;
+                    document.getElementById("priceLabel").innerText = `$${data.current_price.toFixed(2)}`;
+                    
+                    if (data.ebit_margin !== undefined) {
+                        const mVal = (data.ebit_margin * 100).toFixed(1);
+                        document.getElementById("marginSlider").value = mVal;
+                        document.getElementById("marginVal").innerText = mVal + "%";
+                    }
+                    if (data.hist_growth !== undefined) {
+                        const gVal = (data.hist_growth * 100).toFixed(1);
+                        document.getElementById("growthSlider").value = gVal;
+                        document.getElementById("growthVal").innerText = gVal + "%";
+                    }
+                    recalculateModels();
+                }
+            } catch (e) {
+                console.log("Ticker fetch fallback");
+            }
+        }
+
+        function switchTab(num) {
+            activeTab = num;
+            document.querySelectorAll(".tab-btn").forEach((btn, i) => {
+                if (i + 1 === num) btn.classList.add("active");
+                else btn.classList.remove("active");
+            });
+            renderTab(num);
+        }
+
+        function renderTab(num) {
+            if (!currentTabData) return;
+            const container = document.getElementById("tabContent");
+            
+            if (num === 1) {
+                const inc = currentTabData.three_statement.income;
+                container.innerHTML = `
+                    <h3 class="text-base font-black text-sky-800 mb-3 flex items-center justify-between">
+                        <span>1. Pro-Forma Linked 3-Statement Model</span>
+                        <span class="text-xs font-bold text-sky-800 bg-sky-100 px-3 py-1 rounded-full border border-sky-300">Figures in $ Millions ($M)</span>
+                    </h3>
+                    <div class="overflow-x-auto rounded-xl border border-slate-300 bg-white shadow-sm">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-300 bg-slate-100 text-slate-800 font-black uppercase">
+                                    <th class="p-3">Year</th><th class="p-3">Revenue</th><th class="p-3">Gross Profit</th><th class="p-3">EBIT</th><th class="p-3">Interest</th><th class="p-3">Net Income</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                                ${inc.map(r => `
+                                    <tr class="hover:bg-slate-50 transition-colors">
+                                        <td class="p-3 font-bold text-slate-800">${r.Year}</td>
+                                        <td class="p-3 font-extrabold text-sky-700">${fmt(r.Revenue)}</td>
+                                        <td class="p-3 text-slate-700">${fmt(r['Gross Profit'])}</td>
+                                        <td class="p-3 font-bold ${r.EBIT < 0 ? 'text-rose-600' : 'text-slate-800'}">${fmt(r.EBIT)}</td>
+                                        <td class="p-3 text-slate-500">${fmt(r['Interest Expense'])}</td>
+                                        <td class="p-3 font-black ${r['Net Income'] < 0 ? 'text-rose-600' : 'text-emerald-700'}">${fmt(r['Net Income'])}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else if (num === 2) {
+                const dcf = currentTabData.dcf;
+                container.innerHTML = `
+                    <h3 class="text-base font-black text-sky-800 mb-3">2. Discounted Cash Flow (DCF) Valuation & Sensitivity</h3>
+                    <div class="grid grid-cols-4 gap-4 mb-4">
+                        <div class="card-white p-4 text-center border-l-4 border-sky-600"><div class="text-xs text-slate-500 font-bold">DCF Fair Value</div><div class="text-2xl font-black text-sky-700 mt-1">$${dcf.blended_price.toFixed(2)}</div></div>
+                        <div class="card-white p-4 text-center border-l-4 border-emerald-600"><div class="text-xs text-slate-500 font-bold">Margin of Safety</div><div class="text-2xl font-black text-emerald-700 mt-1">${dcf.margin_of_safety_pct.toFixed(1)}%</div></div>
+                        <div class="card-white p-4 text-center border-l-4 border-indigo-600"><div class="text-xs text-slate-500 font-bold">Recommendation</div><div class="text-sm font-black text-indigo-700 mt-2">${dcf.status}</div></div>
+                        <div class="card-white p-4 text-center border-l-4 border-blue-600"><div class="text-xs text-slate-500 font-bold">Altman Z-Score</div><div class="text-2xl font-black text-blue-700 mt-1">${currentTabData.health.z_score.toFixed(2)}</div></div>
+                    </div>
+                    <div id="plotly3dChart" class="w-full h-80 rounded-xl overflow-hidden bg-white border border-slate-300"></div>
+                `;
+
+                setTimeout(() => {
+                    const zData = [
+                        [dcf.blended_price*0.7, dcf.blended_price*0.8, dcf.blended_price*0.9],
+                        [dcf.blended_price*0.9, dcf.blended_price, dcf.blended_price*1.1],
+                        [dcf.blended_price*1.1, dcf.blended_price*1.2, dcf.blended_price*1.3]
+                    ];
+                    Plotly.newPlot('plotly3dChart', [{
+                        z: zData,
+                        x: ['g=1.5%', 'g=2.5%', 'g=3.5%'],
+                        y: ['WACC=6.5%', 'WACC=7.5%', 'WACC=8.5%'],
+                        type: 'surface',
+                        colorscale: 'Viridis'
+                    }], {
+                        title: 'Interactive 3D Valuation Surface (WACC vs. Growth vs. Price)',
+                        autosize: true,
+                        margin: { l: 0, r: 0, b: 0, t: 30 },
+                        paper_bgcolor: 'rgba(255,255,255,1)',
+                        plot_bgcolor: 'rgba(255,255,255,1)',
+                        font: { color: '#1e293b' }
+                    });
+                }, 100);
+
+            } else if (num === 3) {
+                const ma = currentTabData.ma;
+                container.innerHTML = `
+                    <h3 class="text-base font-black text-sky-800 mb-3">3. M&A Accretion / Dilution Model</h3>
+                    <div class="card-white p-6 max-w-xl space-y-4">
+                        <div class="flex justify-between border-b border-slate-200 pb-2"><span class="text-slate-600 text-xs font-bold">Equity Purchase Price:</span><span class="font-black text-sky-700">${fmt(ma.equity_purchase_price)}</span></div>
+                        <div class="flex justify-between border-b border-slate-200 pb-2"><span class="text-slate-600 text-xs font-bold">Pro-Forma Combined EPS:</span><span class="font-black text-emerald-700">$${ma.pro_forma_eps.toFixed(2)}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-600 text-xs font-bold">EPS Accretion / Dilution:</span><span class="font-black text-emerald-700">+$${ma.eps_change.toFixed(2)} (+${ma.eps_change_pct.toFixed(2)}%)</span></div>
+                    </div>
+                `;
+            } else if (num === 5) {
+                const lbo = currentTabData.lbo;
+                container.innerHTML = `
+                    <h3 class="text-base font-black text-sky-800 mb-3">5. Leveraged Buyout (LBO) Model</h3>
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div class="card-white p-4 text-center"><div class="text-xs text-slate-500 font-bold">Entry EV</div><div class="text-2xl font-black text-sky-700">${fmt(lbo.entry_ev)}</div></div>
+                        <div class="card-white p-4 text-center"><div class="text-xs text-slate-500 font-bold">Sponsor 5-Yr IRR</div><div class="text-2xl font-black text-emerald-700">${lbo.sponsor_irr_pct.toFixed(1)}%</div></div>
+                        <div class="card-white p-4 text-center"><div class="text-xs text-slate-500 font-bold">MOIC</div><div class="text-2xl font-black text-indigo-700">${lbo.moic.toFixed(2)}x</div></div>
+                    </div>
+                `;
+            } else if (num === 10) {
+                const opt = currentTabData.option_pricing;
+                container.innerHTML = `
+                    <h3 class="text-base font-black text-sky-800 mb-3">10. Black-Scholes Option Pricing Engine</h3>
+                    <div class="grid grid-cols-2 gap-4 max-w-xl">
+                        <div class="card-white p-6 text-center"><div class="text-xs text-slate-500 font-bold">Call Option Price</div><div class="text-3xl font-black text-sky-700 mt-1">$${opt.call_price.toFixed(2)}</div></div>
+                        <div class="card-white p-6 text-center"><div class="text-xs text-slate-500 font-bold">Put Option Price</div><div class="text-3xl font-black text-indigo-700 mt-1">$${opt.put_price.toFixed(2)}</div></div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `<h3 class="text-base font-black text-sky-800 mb-3">Model ${num} View</h3><p class="text-slate-600 text-sm font-semibold">Engine computed figures normalized in $ Millions ($M).</p>`;
+            }
+        }
+
+        recalculateModels();
+    </script>
 </body>
 </html>
