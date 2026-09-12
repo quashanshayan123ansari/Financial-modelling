@@ -2,43 +2,111 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 
-# Popular Ticker Autocomplete Mapping
-TICKER_SUGGESTIONS = {
-    "AAPL": "Apple Inc.",
-    "MSFT": "Microsoft Corporation",
-    "NVDA": "NVIDIA Corporation",
-    "TSLA": "Tesla, Inc.",
-    "AMZN": "Amazon.com, Inc.",
-    "GOOGL": "Alphabet Inc. (Google)",
-    "META": "Meta Platforms, Inc.",
-    "OPEN": "Opendoor Technologies Inc.",
-    "NFLX": "Netflix, Inc.",
-    "PLTR": "Palantir Technologies Inc.",
-    "AMD": "Advanced Micro Devices, Inc.",
-    "UBER": "Uber Technologies, Inc.",
-    "INTC": "Intel Corporation",
-    "DIS": "The Walt Disney Company",
-    "JPM": "JPMorgan Chase & Co.",
-    "BAC": "Bank of America Corp",
-    "V": "Visa Inc.",
-    "MA": "Mastercard Incorporated",
-    "WMT": "Walmart Inc.",
-    "COST": "Costco Wholesale Corp",
-    "PEP": "PepsiCo, Inc.",
-    "KO": "The Coca-Cola Company",
-    "INFY": "Infosys Limited (ADR)",
-    "INFY.NS": "Infosys Limited (NSE)",
-    "RELIANCE.NS": "Reliance Industries (NSE)",
-    "TCS.NS": "Tata Consultancy Services (NSE)"
+from utils.sec_edgar import fetch_sec_edgar_facts
+from utils.cache_db import get_cached_financials, set_cached_financials
+
+COMPANY_ALIAS_MAP = {
+    "WALMART": "WMT",
+    "WAL-MART": "WMT",
+    "WALMART INC": "WMT",
+    "WMT": "WMT",
+    "APPLE": "AAPL",
+    "MICROSOFT": "MSFT",
+    "NVIDIA": "NVDA",
+    "TESLA": "TSLA",
+    "AMAZON": "AMZN",
+    "GOOGLE": "GOOGL",
+    "ALPHABET": "GOOGL",
+    "META": "META",
+    "FACEBOOK": "META",
+    "OPENDOOR": "OPEN",
+    "NETFLIX": "NFLX",
+    "PALANTIR": "PLTR",
+    "AMD": "AMD",
+    "UBER": "UBER",
+    "COSTCO": "COST",
+    "DISNEY": "DIS",
+    "WALT DISNEY": "DIS",
+    "INTEL": "INTC",
+    "JPMORGAN": "JPM",
+    "JPMORGAN CHASE": "JPM",
+    "BANK OF AMERICA": "BAC",
+    "VISA": "V",
+    "MASTERCARD": "MA",
+    "COCA COLA": "KO",
+    "COCA-COLA": "KO",
+    "PEPSI": "PEP",
+    "PEPSICO": "PEP",
+    "STARBUCKS": "SBUX",
+    "NIKE": "NKE"
 }
 
-def fetch_financial_data(ticker_symbol: str) -> dict:
+TICKER_SUGGESTIONS = {
+    "WMT": "Walmart Inc. (SEC EDGAR 10-K)",
+    "AAPL": "Apple Inc. (SEC EDGAR 10-K)",
+    "MSFT": "Microsoft Corporation (SEC EDGAR 10-K)",
+    "NVDA": "NVIDIA Corporation (SEC EDGAR 10-K)",
+    "TSLA": "Tesla, Inc. (SEC EDGAR 10-K)",
+    "AMZN": "Amazon.com, Inc. (SEC EDGAR 10-K)",
+    "GOOGL": "Alphabet Inc. (SEC EDGAR 10-K)",
+    "META": "Meta Platforms, Inc. (SEC EDGAR 10-K)",
+    "OPEN": "Opendoor Technologies Inc. (SEC EDGAR 10-K)",
+    "NFLX": "Netflix, Inc. (SEC EDGAR 10-K)",
+    "PLTR": "Palantir Technologies (SEC EDGAR 10-K)",
+    "AMD": "Advanced Micro Devices (SEC EDGAR 10-K)",
+    "UBER": "Uber Technologies (SEC EDGAR 10-K)",
+    "COST": "Costco Wholesale Corporation (SEC EDGAR 10-K)",
+    "DIS": "The Walt Disney Company (SEC EDGAR 10-K)",
+    "JPM": "JPMorgan Chase & Co. (SEC EDGAR 10-K)",
+    "BAC": "Bank of America Corporation (SEC EDGAR 10-K)",
+    "V": "Visa Inc. (SEC EDGAR 10-K)",
+    "MA": "Mastercard Incorporated (SEC EDGAR 10-K)",
+    "KO": "The Coca-Cola Company (SEC EDGAR 10-K)",
+    "PEP": "PepsiCo, Inc. (SEC EDGAR 10-K)",
+    "NKE": "NIKE, Inc. (SEC EDGAR 10-K)",
+    "SBUX": "Starbucks Corporation (SEC EDGAR 10-K)",
+    "INFY": "Infosys Limited (ADR)",
+    "INFY.NS": "Infosys Limited (NSE)",
+    "RELIANCE.NS": "Reliance Industries (NSE)"
+}
+
+def fetch_financial_data(ticker_symbol: str, provider: str = "SEC_EDGAR_OR_AUTO", use_cache: bool = True) -> dict:
     """
-    Fetches real-time financial statements, metrics, and stock metadata using yfinance,
-    automatically normalizing all dollar amounts to $ Millions ($M) and shares to Millions (M).
+    Multi-Provider Financial Statement Fetcher:
+    - Checks SQLite Cache Layer (<5ms response)
+    - Queries official SEC EDGAR 10-K API for US stocks
+    - Queries yfinance for market prices & international stocks
+    - Normalizes all dollar values to $ Millions ($M)
     """
+    raw_query = ticker_symbol.strip().upper()
+    clean_ticker = COMPANY_ALIAS_MAP.get(raw_query, raw_query)
+
+    # 1. Check SQLite Cache Layer
+    if use_cache:
+        cached = get_cached_financials(clean_ticker)
+        if cached:
+            return cached
+
+    # 2. Try SEC EDGAR API for US public companies
+    if provider in ["SEC_EDGAR", "SEC_EDGAR_OR_AUTO"]:
+        sec_data = fetch_sec_edgar_facts(clean_ticker)
+        if "error" not in sec_data:
+            # Augment with live market price if available via yfinance
+            try:
+                t = yf.Ticker(clean_ticker)
+                inf = t.info or {}
+                p = inf.get("currentPrice") or inf.get("regularMarketPrice") or inf.get("previousClose")
+                if p and p > 0:
+                    sec_data["current_price"] = float(p)
+                    sec_data["market_cap"] = (sec_data["shares_outstanding"] * p)
+            except Exception:
+                pass
+
+            set_cached_financials(clean_ticker, sec_data)
+            return sec_data
+
+    # 3. Fallback / Direct yfinance Provider
     try:
-        clean_ticker = ticker_symbol.strip().upper()
         ticker = yf.Ticker(clean_ticker)
         info = ticker.info or {}
 
@@ -47,7 +115,7 @@ def fetch_financial_data(ticker_symbol: str) -> dict:
         cf = ticker.cashflow
 
         if inc is None or inc.empty:
-            return {"error": f"Could not retrieve financial statements for '{clean_ticker}'. Please check ticker or try manual entry."}
+            return {"error": f"Could not retrieve financial statements for '{clean_ticker}' from any provider."}
 
         latest_col = inc.columns[0]
         
@@ -86,11 +154,9 @@ def fetch_financial_data(ticker_symbol: str) -> dict:
         raw_shares = info.get("sharesOutstanding") or (info.get("marketCap", 0) / current_price if current_price > 0 else 1000000.0)
         beta = info.get("beta") or 1.1
 
-        # Scale Factor: Normalize raw dollar amounts to Millions ($M)
-        scale = 1.0
-        if abs(raw_revenue) > 100000:
-            scale = 1000000.0
-            
+        scale = 1000000.0 if abs(raw_revenue) > 100000 else 1.0
+        shares_scale = 1000000.0 if raw_shares > 100000 else 1.0
+
         revenue = raw_revenue / scale
         gross_profit = raw_gross_profit / scale
         ebit = raw_ebit / scale
@@ -108,19 +174,11 @@ def fetch_financial_data(ticker_symbol: str) -> dict:
         retained_earnings = raw_retained_earnings / scale
         cfo = raw_cfo / scale
         capex = raw_capex / scale
-
-        # Scale shares to Millions of shares
-        shares_scale = 1.0
-        if raw_shares > 100000:
-            shares_scale = 1000000.0
         shares = raw_shares / shares_scale
-
         market_cap = (info.get("marketCap", raw_shares * current_price)) / scale
 
-        # Calculate historical growth rate
         hist_growth = 0.08
         if inc.shape[1] >= 2:
-            prev_col = inc.columns[1]
             prev_rev = safe_get(inc, ["Total Revenue", "Operating Revenue", "Revenue"], default=0)
             if prev_rev > 0 and raw_revenue > 0:
                 hist_growth = (raw_revenue - prev_rev) / prev_rev
@@ -131,7 +189,8 @@ def fetch_financial_data(ticker_symbol: str) -> dict:
         nwc = (ar + inv) - (safe_get(bs, ["Payables And Accrued Expenses", "Accounts Payable"]) / scale)
         nwc_pct_rev = nwc / revenue if revenue != 0 else 0.05
 
-        return {
+        payload = {
+            "source": "Standardized Financial Provider",
             "ticker": clean_ticker,
             "company_name": info.get("longName") or info.get("shortName") or TICKER_SUGGESTIONS.get(clean_ticker, clean_ticker),
             "sector": info.get("sector", "General Industry"),
@@ -164,13 +223,16 @@ def fetch_financial_data(ticker_symbol: str) -> dict:
             "capex_pct_rev": float(capex_pct_rev),
             "nwc_pct_rev": float(nwc_pct_rev)
         }
+
+        set_cached_financials(clean_ticker, payload)
+        return payload
     except Exception as e:
-        return {"error": f"Failed to fetch data for {ticker_symbol}: {str(e)}"}
+        return {"error": f"Failed to fetch data for {clean_ticker}: {str(e)}"}
 
 def get_preset_template(template_name: str) -> dict:
     templates = {
         "Tech Growth Co": {
-            "ticker": "TECH-PRESET", "company_name": "Apex Cloud & AI Systems", "sector": "Technology",
+            "source": "Preset Template", "ticker": "TECH-PRESET", "company_name": "Apex Cloud & AI Systems", "sector": "Technology",
             "current_price": 145.0, "market_cap": 145000.0, "shares_outstanding": 1000.0, "beta": 1.25,
             "revenue": 25000.0, "gross_profit": 17500.0, "ebit": 6250.0, "ebitda": 7500.0, "da": 1250.0,
             "net_income": 4800.0, "ebt": 6000.0, "cash": 8000.0, "accounts_receivable": 3500.0, "inventory": 800.0,
@@ -179,7 +241,7 @@ def get_preset_template(template_name: str) -> dict:
             "capex": 1200.0, "hist_growth": 0.15, "ebit_margin": 0.25, "da_pct_rev": 0.05, "capex_pct_rev": 0.048, "nwc_pct_rev": 0.06
         },
         "Mature Industrial Co": {
-            "ticker": "IND-PRESET", "company_name": "Titan Industrial Holdings", "sector": "Industrials",
+            "source": "Preset Template", "ticker": "IND-PRESET", "company_name": "Titan Industrial Holdings", "sector": "Industrials",
             "current_price": 65.0, "market_cap": 32500.0, "shares_outstanding": 500.0, "beta": 0.85,
             "revenue": 18000.0, "gross_profit": 6300.0, "ebit": 2700.0, "ebitda": 3800.0, "da": 1100.0,
             "net_income": 1850.0, "ebt": 2300.0, "cash": 2200.0, "accounts_receivable": 2100.0, "inventory": 2800.0,
@@ -188,7 +250,7 @@ def get_preset_template(template_name: str) -> dict:
             "capex": 1000.0, "hist_growth": 0.04, "ebit_margin": 0.15, "da_pct_rev": 0.061, "capex_pct_rev": 0.055, "nwc_pct_rev": 0.08
         },
         "High-Debt Consumer Co": {
-            "ticker": "DEBT-PRESET", "company_name": "Global Brands Retail", "sector": "Consumer Cyclical",
+            "source": "Preset Template", "ticker": "DEBT-PRESET", "company_name": "Global Brands Retail", "sector": "Consumer Cyclical",
             "current_price": 28.0, "market_cap": 8400.0, "shares_outstanding": 300.0, "beta": 1.40,
             "revenue": 12000.0, "gross_profit": 3600.0, "ebit": 960.0, "ebitda": 1440.0, "da": 480.0,
             "net_income": 420.0, "ebt": 530.0, "cash": 900.0, "accounts_receivable": 1100.0, "inventory": 2100.0,

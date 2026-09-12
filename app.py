@@ -76,12 +76,12 @@ st.markdown("""
         font-size: 0.95rem;
     }
     
-    /* 4. Top Tabs Styling - Crisp & Distinct */
+    /* 4. Top Tabs Styling - Crisp, High-Contrast & 100% Visible */
     div.stTabs [data-baseweb="tab-list"] {
         background-color: #f1f5f9 !important;
         padding: 8px;
         border-radius: 16px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #cbd5e1;
         gap: 6px;
     }
 
@@ -89,20 +89,32 @@ st.markdown("""
         background-color: #ffffff !important;
         border: 1px solid #cbd5e1 !important;
         border-radius: 12px !important;
-        color: #334155 !important;
-        font-weight: 700 !important;
-        font-size: 0.88rem !important;
         padding: 10px 18px !important;
     }
 
+    /* Force 100% visibility for inactive tab names */
+    div.stTabs [data-baseweb="tab"] p, 
+    div.stTabs [data-baseweb="tab"] span, 
+    div.stTabs [data-baseweb="tab"] div,
+    button[data-baseweb="tab"] * {
+        color: #0f172a !important;
+        font-weight: 800 !important;
+        font-size: 0.88rem !important;
+        opacity: 1 !important;
+    }
+
+    /* Active Tab Styling */
     div.stTabs [aria-selected="true"] {
         background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%) !important;
-        color: #ffffff !important;
         border: 1px solid #0284c7 !important;
-        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25) !important;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3) !important;
     }
-    div.stTabs [aria-selected="true"] p, div.stTabs [aria-selected="true"] span {
+    div.stTabs [aria-selected="true"] p, 
+    div.stTabs [aria-selected="true"] span, 
+    div.stTabs [aria-selected="true"] div,
+    button[aria-selected="true"] * {
         color: #ffffff !important;
+        font-weight: 900 !important;
     }
 
     /* 5. Metrics & Metric Cards */
@@ -172,11 +184,15 @@ input_mode = st.sidebar.radio(
 suggestion_options = [f"{t} - {name}" for t, name in TICKER_SUGGESTIONS.items()] + ["Custom Ticker / Search..."]
 
 if input_mode == "🔍 Live Public Ticker":
-    selected_suggestion = st.sidebar.selectbox("Select Company or Search", suggestion_options, index=0)
-    if selected_suggestion == "Custom Ticker / Search...":
-        ticker_input = st.sidebar.text_input("Enter Ticker (e.g. OPEN, TSLA, AAPL)", value="OPEN")
-    else:
+    ticker_query_input = st.sidebar.text_input("Enter Ticker or Company (e.g. WMT, Walmart, AAPL)", value="WMT")
+    selected_suggestion = st.sidebar.selectbox("Or Quick-Pick Preset Company", suggestion_options, index=0)
+    
+    if ticker_query_input and ticker_query_input.strip() != "WMT":
+        ticker_input = ticker_query_input.strip()
+    elif selected_suggestion != "Custom Ticker / Search...":
         ticker_input = selected_suggestion.split(" - ")[0]
+    else:
+        ticker_input = ticker_query_input.strip()
 
     if st.sidebar.button("Fetch Live Financials", type="primary"):
         with st.spinner(f"Fetching financials in $ Millions ($M) for {ticker_input}..."):
