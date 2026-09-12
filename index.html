@@ -67,7 +67,23 @@
             </div>
         </div>
         <div class="flex items-center gap-3">
-            <input type="text" id="tickerSearchInput" placeholder="Enter Ticker (e.g. AAPL, MSFT)" class="bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 w-48">
+            <input type="text" id="tickerSearchInput" list="tickerSuggestions" placeholder="Type Company or Ticker (e.g. OPEN, TSLA, AAPL)" class="bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 w-64">
+            <datalist id="tickerSuggestions">
+                <option value="OPEN">Opendoor Technologies Inc.</option>
+                <option value="AAPL">Apple Inc.</option>
+                <option value="MSFT">Microsoft Corporation</option>
+                <option value="NVDA">NVIDIA Corporation</option>
+                <option value="TSLA">Tesla, Inc.</option>
+                <option value="AMZN">Amazon.com, Inc.</option>
+                <option value="GOOGL">Alphabet Inc. (Google)</option>
+                <option value="META">Meta Platforms, Inc.</option>
+                <option value="NFLX">Netflix, Inc.</option>
+                <option value="PLTR">Palantir Technologies</option>
+                <option value="AMD">Advanced Micro Devices</option>
+                <option value="UBER">Uber Technologies</option>
+                <option value="INFY">Infosys Limited</option>
+                <option value="RELIANCE.NS">Reliance Industries</option>
+            </datalist>
             <button onclick="fetchTickerData()" class="bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2">
                 <i class="fa-solid fa-magnifying-glass"></i> Fetch Ticker
             </button>
