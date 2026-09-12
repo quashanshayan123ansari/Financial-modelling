@@ -21,7 +21,7 @@ from utils.data_fetcher import fetch_financial_data, get_preset_template, TICKER
 from utils.parser import parse_pdf_report, parse_csv_report
 from utils.export import export_model_to_excel
 
-# --- Page Configuration & Styling ---
+# --- Page Configuration & Custom Styling ---
 st.set_page_config(
     page_title="10-Model Financial Suite Dashboard",
     page_icon="📈",
@@ -32,18 +32,18 @@ st.set_page_config(
 st.markdown("""
 <style>
     .stApp {
-        background-color: #0d1117;
-        color: #c9d1d9;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background-color: #0f172a;
+        color: #f8fafc;
+        font-family: 'Inter', -apple-system, sans-serif;
     }
     
     .header-card {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
         border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 16px;
+        border-radius: 20px;
         padding: 24px;
         margin-bottom: 24px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
     
     .header-title {
@@ -52,23 +52,27 @@ st.markdown("""
         background: linear-gradient(90deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 6px;
-    }
-    
-    .header-subtitle {
-        color: #94a3b8;
-        font-size: 1.05rem;
     }
     
     div[data-testid="stMetricValue"] {
         font-size: 1.8rem !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
         color: #38bdf8 !important;
+    }
+
+    .badge-unit {
+        background: rgba(56, 189, 248, 0.15);
+        color: #38bdf8;
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- Sidebar Inputs ---
+# --- Sidebar Controls ---
 st.sidebar.title("Financial Model Suite")
 
 input_mode = st.sidebar.radio(
@@ -76,19 +80,17 @@ input_mode = st.sidebar.radio(
     ["🔍 Live Public Ticker", "📄 Upload 5-Yr Report (PDF/CSV)", "⚡ Sector Preset Templates", "✏️ Manual Statement Entry"]
 )
 
-# Autocomplete Ticker Options
 suggestion_options = [f"{t} - {name}" for t, name in TICKER_SUGGESTIONS.items()] + ["Custom Ticker / Search..."]
 
 if input_mode == "🔍 Live Public Ticker":
-    selected_suggestion = st.sidebar.selectbox("Select Popular Company or Custom", suggestion_options, index=0)
-    
+    selected_suggestion = st.sidebar.selectbox("Select Company or Search", suggestion_options, index=0)
     if selected_suggestion == "Custom Ticker / Search...":
-        ticker_input = st.sidebar.text_input("Enter Company Ticker or Name (e.g. OPEN, TSLA, INFY)", value="OPEN")
+        ticker_input = st.sidebar.text_input("Enter Ticker (e.g. OPEN, TSLA, AAPL)", value="OPEN")
     else:
         ticker_input = selected_suggestion.split(" - ")[0]
 
     if st.sidebar.button("Fetch Live Financials", type="primary"):
-        with st.spinner(f"Fetching financials in $ Millions for {ticker_input}..."):
+        with st.spinner(f"Fetching financials in $ Millions ($M) for {ticker_input}..."):
             fetched = fetch_financial_data(ticker_input)
             if "error" in fetched:
                 st.sidebar.error(fetched["error"])
@@ -148,11 +150,11 @@ wacc_override = st.sidebar.slider("WACC Rate (%)", 4.0, 18.0, 9.0, 0.25) / 100.0
 term_growth_slider = st.sidebar.slider("Terminal Growth (%)", 0.5, 5.0, 2.5, 0.1) / 100.0
 exit_mult_slider = st.sidebar.slider("Exit Multiple", 4.0, 30.0, 12.0, 0.5)
 
-# --- Main Header ---
+# --- Header Card ---
 st.markdown(f"""
 <div class="header-card">
     <div class="header-title">📊 10-Model Financial Suite & Forecasting Dashboard</div>
-    <div class="header-subtitle">Entity: <b>{cd.get('company_name', 'N/A')} ({cd.get('ticker', 'N/A')})</b> | Sector: <b>{cd.get('sector', 'N/A')}</b> | Stock Price: <b>${cd.get('current_price', 0):.2f}</b> | <i>All statement metrics in <b>$ Millions ($M)</b></i></div>
+    <div class="header-subtitle">Entity: <b>{cd.get('company_name', 'N/A')} ({cd.get('ticker', 'N/A')})</b> | Sector: <b>{cd.get('sector', 'N/A')}</b> | Stock Price: <b>${cd.get('current_price', 0):.2f}</b> <span class="badge-unit">All Values in $ Millions ($M)</span></div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -207,10 +209,9 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12 = st.t
     "9. 🔮 Forecasting", "10. 📉 Option Pricing", "11. 🩺 Financial Health", "12. 📥 Export Excel"
 ])
 
-# Helper formatter for Millions
 def fmt_m(val):
     if isinstance(val, (int, float)):
-        return f"${val:,.1f}M"
+        return f"${val:,.2f}M"
     return str(val)
 
 # --- TAB 1: THREE-STATEMENT MODEL ---
@@ -246,7 +247,7 @@ with tab2:
 with tab3:
     st.subheader("3. Merger & Acquisition (M&A) Accretion / Dilution Model")
     m1, m2, m3 = st.columns(3)
-    m1.metric("Equity Purchase Price", f"${ma_res['equity_purchase_price']:,.1f}M")
+    m1.metric("Equity Purchase Price", f"${ma_res['equity_purchase_price']:,.2f}M")
     m2.metric("Pro-Forma EPS", f"${ma_res['pro_forma_eps']:.2f}")
     m3.metric("Accretion / Dilution", f"${ma_res['eps_change']:.2f} ({ma_res['eps_change_pct']:+.2f}%)")
     st.dataframe(ma_res["deal_summary"], use_container_width=True)
@@ -255,8 +256,8 @@ with tab3:
 with tab4:
     st.subheader("4. Initial Public Offering (IPO) Pricing & Dilution Model")
     i1, i2 = st.columns(2)
-    i1.metric("Post-IPO Shares", f"{ipo_res['post_ipo_shares']:,.1f}M")
-    i2.metric("Net Proceeds to Company", f"${ipo_res['mid_net_proceeds']:,.1f}M")
+    i1.metric("Post-IPO Shares", f"{ipo_res['post_ipo_shares']:,.2f}M")
+    i2.metric("Net Proceeds to Company", f"${ipo_res['mid_net_proceeds']:,.2f}M")
     st.markdown("### IPO Pricing Scenarios")
     st.dataframe(ipo_res["scenarios_df"], use_container_width=True)
 
@@ -264,8 +265,8 @@ with tab4:
 with tab5:
     st.subheader("5. Leveraged Buyout (LBO) Debt Paydown Model")
     l1, l2, l3, l4 = st.columns(4)
-    l1.metric("Entry EV", f"${lbo_res['entry_ev']:,.1f}M")
-    l2.metric("Initial Debt", f"${lbo_res['initial_debt']:,.1f}M")
+    l1.metric("Entry EV", f"${lbo_res['entry_ev']:,.2f}M")
+    l2.metric("Initial Debt", f"${lbo_res['initial_debt']:,.2f}M")
     l3.metric("Sponsor IRR", f"{lbo_res['sponsor_irr_pct']:.1f}%")
     l4.metric("MOIC", f"{lbo_res['moic']:.2f}x")
     lbo_df = lbo_res["schedule"]
@@ -275,7 +276,7 @@ with tab5:
 with tab6:
     st.subheader("6. Sum of the Parts (SOTP) Segment Valuation Model")
     s1, s2 = st.columns(2)
-    s1.metric("Aggregate Enterprise Value", f"${sotp_res['total_ev']:,.1f}M")
+    s1.metric("Aggregate Enterprise Value", f"${sotp_res['total_ev']:,.2f}M")
     s2.metric("Implied Intrinsic Share Price", f"${sotp_res['implied_share_price']:.2f}")
     st.markdown("### Segment Breakdown")
     st.dataframe(sotp_res["sotp_df"], use_container_width=True)
@@ -290,15 +291,15 @@ with tab7:
 with tab8:
     st.subheader("8. Departmental Budget vs. Actual Variance Model ($M)")
     b1, b2, b3 = st.columns(3)
-    b1.metric("Total Budget", f"${budget_res['total_budget']:,.1f}M")
-    b2.metric("Actual YTD", f"${budget_res['total_actual']:,.1f}M")
-    b3.metric("Total Variance", f"${budget_res['total_variance_dollar']:,.1f}M ({budget_res['total_variance_pct']:+.1f}%)")
+    b1.metric("Total Budget", f"${budget_res['total_budget']:,.2f}M")
+    b2.metric("Actual YTD", f"${budget_res['total_actual']:,.2f}M")
+    b3.metric("Total Variance", f"${budget_res['total_variance_dollar']:,.2f}M ({budget_res['total_variance_pct']:+.1f}%)")
     st.dataframe(budget_res["variance_df"], use_container_width=True)
 
 # --- TAB 9: FORECASTING MODEL ---
 with tab9:
     st.subheader("9. Multi-Scenario Time-Series Financial Forecasting Model ($M)")
-    fig_fc = px.line(fc_res["combined_df"], x="Year", y="Revenue", color="Scenario", title="5-Year Revenue Forecast Trajectories Across Scenarios ($M)")
+    fig_fc = px.line(fc_res["combined_df"], x="Year", y="Revenue", color="Scenario", title="5-Year Revenue Forecast Trajectories ($M)")
     fig_fc.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     st.plotly_chart(fig_fc, use_container_width=True)
 

@@ -102,16 +102,16 @@ class DCFModel:
             
             projections.append({
                 "Year": f"Year {i}",
-                "Revenue": rev,
-                "Revenue Growth %": growth * 100,
-                "EBIT": ebit,
-                "EBITDA": ebit + da,
-                "NOPAT": nopat,
-                "D&A": da,
-                "CapEx": capex,
-                "NWC Change": change_nwc,
-                "UFCF": ufcf,
-                "PV of FCF": pv_fcf
+                "Revenue": round(rev, 2),
+                "Revenue Growth %": round(growth * 100, 2),
+                "EBIT": round(ebit, 2),
+                "EBITDA": round(ebit + da, 2),
+                "NOPAT": round(nopat, 2),
+                "D&A": round(da, 2),
+                "CapEx": round(capex, 2),
+                "NWC Change": round(change_nwc, 2),
+                "UFCF": round(ufcf, 2),
+                "PV of FCF": round(pv_fcf, 2)
             })
             
             current_rev = rev
