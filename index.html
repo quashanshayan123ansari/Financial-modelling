@@ -308,13 +308,28 @@
             return String(val);
         }
 
+        let activeCompany = {
+            ticker: "WMT",
+            company_name: "Walmart Inc.",
+            revenue: 713163.0,
+            current_price: 107.15,
+            shares_outstanding: 7958.08,
+            cash: 10727.0,
+            total_debt: 34624.0,
+            ebit_margin: 0.042,
+            hist_growth: 0.045
+        };
+
         async function recalculateModels() {
             const reqData = {
-                revenue: 12000.0,
+                revenue: activeCompany.revenue || 713163.0,
                 growth: parseFloat(document.getElementById("growthSlider").value) / 100.0,
                 ebit_margin: parseFloat(document.getElementById("marginSlider").value) / 100.0,
                 tax_rate: 0.21, da_pct: 0.03, capex_pct: 0.04, nwc_pct: 0.05,
-                cash: 2500.0, debt: 3500.0, shares: 100.0, price: 120.0,
+                cash: activeCompany.cash || 10727.0,
+                debt: activeCompany.total_debt || 34624.0,
+                shares: activeCompany.shares_outstanding || 7958.08,
+                price: activeCompany.current_price || 107.15,
                 wacc: parseFloat(document.getElementById("waccSlider").value) / 100.0,
                 terminal_growth: parseFloat(document.getElementById("termSlider").value) / 100.0,
                 exit_multiple: parseFloat(document.getElementById("exitSlider").value)
@@ -334,11 +349,12 @@
         }
 
         async function fetchTickerData() {
-            const sym = document.getElementById("tickerSearchInput").value || "OPEN";
+            const sym = document.getElementById("tickerSearchInput").value || "WMT";
             try {
                 const res = await fetch(`/api/ticker?symbol=${sym}`);
                 const data = await res.json();
                 if (data.company_name) {
+                    activeCompany = data;
                     document.getElementById("companyNameLabel").innerText = `${data.company_name} (${data.ticker})`;
                     document.getElementById("priceLabel").innerText = `$${data.current_price.toFixed(2)}`;
                     

@@ -222,8 +222,8 @@ if input_mode == "🔍 Live Public Ticker":
 
     do_fetch = st.sidebar.button("Fetch Live Financials", type="primary")
     
-    if do_fetch or ("current_ticker_loaded" in st.session_state and st.session_state["current_ticker_loaded"] != ticker_input):
-        with st.spinner(f"Fetching financials in $ Millions ($M) for {ticker_input}..."):
+    if do_fetch or ("current_ticker_loaded" not in st.session_state or st.session_state["current_ticker_loaded"] != ticker_input):
+        with st.spinner(f"Fetching audited financials in $ Millions ($M) for {ticker_input}..."):
             fetched = fetch_financial_data(ticker_input)
             if "error" in fetched:
                 st.sidebar.error(fetched["error"])
@@ -271,18 +271,31 @@ elif input_mode == "✏️ Manual Statement Entry":
     }
 
 if "company_data" not in st.session_state or st.session_state["company_data"] is None:
-    st.session_state["company_data"] = get_preset_template("Tech Growth Co")
+    st.session_state["company_data"] = fetch_financial_data("WMT")
+    st.session_state["current_ticker_loaded"] = "WMT"
 
 cd = st.session_state["company_data"]
 
 # --- Global Parameter Sliders ---
 st.sidebar.markdown("---")
 st.sidebar.subheader("⚙️ Financial Drivers")
-growth_slider = st.sidebar.slider("Forecast Revenue Growth (%)", -30.0, 40.0, float(cd.get("hist_growth", 0.08)*100), 0.5) / 100.0
-ebit_margin_slider = st.sidebar.slider("EBIT Margin (%)", -30.0, 50.0, float(cd.get("ebit_margin", 0.20)*100), 0.5) / 100.0
-wacc_override = st.sidebar.slider("WACC Rate (%)", 4.0, 18.0, 9.0, 0.25) / 100.0
-term_growth_slider = st.sidebar.slider("Terminal Growth (%)", 0.5, 5.0, 2.5, 0.1) / 100.0
-exit_mult_slider = st.sidebar.slider("Exit Multiple", 4.0, 30.0, 12.0, 0.5)
+ticker_key = str(cd.get("ticker", "DEFAULT")).replace(".", "_")
+
+# Dynamically set real growth & real margin defaults from actual audited statements
+real_growth_pct = round(float(cd.get("hist_growth", 0.045)) * 100.0, 1)
+real_margin_pct = round(float(cd.get("ebit_margin", 0.042)) * 100.0, 1)
+
+growth_slider = st.sidebar.slider(
+    "Forecast Revenue Growth (%)", -30.0, 40.0, real_growth_pct, 0.5, key=f"growth_s_{ticker_key}"
+) / 100.0
+
+ebit_margin_slider = st.sidebar.slider(
+    "EBIT Margin (%)", -30.0, 50.0, real_margin_pct, 0.5, key=f"margin_s_{ticker_key}"
+) / 100.0
+
+wacc_override = st.sidebar.slider("WACC Rate (%)", 4.0, 18.0, 9.0, 0.25, key=f"wacc_s_{ticker_key}") / 100.0
+term_growth_slider = st.sidebar.slider("Terminal Growth (%)", 0.5, 5.0, 2.5, 0.1, key=f"term_s_{ticker_key}") / 100.0
+exit_mult_slider = st.sidebar.slider("Exit Multiple", 4.0, 30.0, 12.0, 0.5, key=f"exit_s_{ticker_key}")
 
 # --- Header Card ---
 st.markdown(f"""
