@@ -3,25 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>10-Model Financial Suite & Forecasting Dashboard</title>
+    <title>10-Model 3D Financial Suite & Forecasting Dashboard</title>
 
     <!-- Tailwind CSS & Plotly CDN & Three.js CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-            color: #1e293b;
+            font-family: 'Outfit', -apple-system, sans-serif;
+            background-color: #030712;
+            color: #f3f4f6;
             overflow-x: hidden;
+            perspective: 1200px;
         }
 
-        /* 3D Canvas Container */
-        #canvas3d {
+        /* Fullscreen 3D Canvas */
+        #webgl3d {
             position: fixed;
             top: 0;
             left: 0;
@@ -31,69 +32,73 @@
             pointer-events: none;
         }
 
-        /* Premium Light Glassmorphism */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.75);
-            border: 1px solid rgba(226, 232, 240, 0.8);
+        /* 3D Glassmorphism Cards */
+        .card-3d {
+            background: linear-gradient(135deg, rgba(31, 41, 55, 0.7) 0%, rgba(17, 24, 39, 0.85) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(16px);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            transition: transform 0.15s ease-out, box-shadow 0.2s ease;
+            transform-style: preserve-3d;
         }
 
-        .glass-card:hover {
-            box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.08);
+        .card-3d:hover {
+            box-shadow: 0 30px 60px rgba(56, 189, 248, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
-        .header-gradient {
-            background: linear-gradient(135deg, #0284c7 0%, #4f46e5 50%, #9333ea 100%);
+        .gradient-text-3d {
+            background: linear-gradient(90deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 20px rgba(56, 189, 248, 0.3);
         }
 
-        .tab-btn {
-            padding: 10px 20px;
-            border-radius: 14px;
-            font-weight: 600;
-            font-size: 0.875rem;
-            transition: all 0.2s ease;
-            color: #64748b;
+        .tab-3d {
+            padding: 12px 22px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #9ca3af;
             white-space: nowrap;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .tab-btn.active {
-            background: #ffffff;
-            color: #0284c7;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
-            border: 1px solid rgba(2, 132, 199, 0.2);
+        .tab-3d.active {
+            background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
+            color: #ffffff;
+            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px) scale(1.03);
         }
 
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: #0b0f19; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-4 space-y-4">
 
-    <!-- 3D Node Particle Network Canvas -->
-    <canvas id="canvas3d"></canvas>
+    <!-- 3D Node Mesh Background Canvas -->
+    <canvas id="webgl3d"></canvas>
 
-    <!-- Header -->
-    <header class="glass-card p-5 flex flex-wrap items-center justify-between gap-4">
+    <!-- Header 3D Card -->
+    <header class="card-3d p-6 flex flex-wrap items-center justify-between gap-4" id="headerCard">
         <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-sky-500/20">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl shadow-xl shadow-sky-500/30 border border-white/20">
                 <i class="fa-solid fa-cube"></i>
             </div>
             <div>
-                <h1 class="text-2xl font-extrabold header-gradient">10-Model Financial Suite & 3D Forecasting Dashboard</h1>
-                <p class="text-xs text-slate-500 font-medium">Entity: <span id="companyNameLabel" class="font-bold text-slate-800">Apex Cloud Systems (TECH)</span> | Sector: <span id="sectorLabel" class="font-bold text-slate-700">Technology</span> | Stock Price: <span id="priceLabel" class="font-bold text-emerald-600">$145.00</span></p>
+                <h1 class="text-3xl font-black gradient-text-3d">10-Model 3D Financial Suite & Forecasting Dashboard</h1>
+                <p class="text-xs text-slate-400 font-medium">Node.js WebGL Engine | Entity: <span id="companyNameLabel" class="font-bold text-sky-400">Apex Cloud Systems (TECH)</span> | Price: <span id="priceLabel" class="font-bold text-emerald-400">$145.00</span> | <span class="bg-sky-500/20 text-sky-300 px-2.5 py-0.5 rounded-full border border-sky-500/30">$ Millions ($M)</span></p>
             </div>
         </div>
 
         <div class="flex items-center gap-3">
             <div class="relative">
-                <input type="text" id="tickerSearchInput" list="tickerSuggestions" placeholder="Type Company Name or Ticker (e.g. OPEN, TSLA)" class="bg-white/90 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 w-72 shadow-sm">
+                <input type="text" id="tickerSearchInput" list="tickerSuggestions" placeholder="Type Ticker (e.g. OPEN, TSLA, AAPL)" class="bg-slate-900/90 border border-slate-700/80 rounded-2xl px-5 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 w-72 shadow-inner">
                 <datalist id="tickerSuggestions">
                     <option value="OPEN">Opendoor Technologies Inc.</option>
                     <option value="AAPL">Apple Inc.</option>
@@ -111,176 +116,161 @@
                     <option value="RELIANCE.NS">Reliance Industries</option>
                 </datalist>
             </div>
-            <button onclick="fetchTickerData()" class="bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all shadow-md shadow-sky-500/20 flex items-center gap-2">
-                <i class="fa-solid fa-magnifying-glass"></i> Fetch Financials
+            <button onclick="fetchTickerData()" class="bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-extrabold px-6 py-3 rounded-2xl text-sm transition-all shadow-lg shadow-sky-500/30 flex items-center gap-2">
+                <i class="fa-solid fa-magnifying-glass"></i> Fetch 3D Models
             </button>
         </div>
     </header>
 
-    <!-- Main Workspace -->
-    <div class="flex-1 flex flex-col md:flex-row gap-4">
+    <!-- Main 3D Layout -->
+    <div class="flex-1 flex flex-col md:flex-row gap-5">
 
-        <!-- Sidebar Sliders -->
-        <aside class="w-full md:w-80 glass-card p-5 space-y-6">
-            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-                <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                    <i class="fa-solid fa-sliders text-sky-500"></i> Forecast Drivers
+        <!-- Sidebar Controls Card -->
+        <aside class="w-full md:w-80 card-3d p-6 space-y-6" id="sidebarCard">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h2 class="text-xs font-black uppercase tracking-wider text-sky-400 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> 3D Forecast Drivers
                 </h2>
-                <span class="text-[10px] font-bold bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full">$ Millions ($M)</span>
+                <span class="text-[10px] font-extrabold bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30">Node API</span>
             </div>
 
-            <div class="space-y-4 text-xs">
+            <div class="space-y-4 text-xs font-medium">
                 <div>
-                    <div class="flex justify-between mb-1 font-semibold text-slate-700">
-                        <span>Revenue Growth (%)</span>
-                        <span id="growthVal" class="text-sky-600 font-extrabold">8.0%</span>
+                    <div class="flex justify-between mb-1.5 text-slate-300">
+                        <span>Revenue Growth Rate (%)</span>
+                        <span id="growthVal" class="text-sky-400 font-extrabold">8.0%</span>
                     </div>
-                    <input type="range" id="growthSlider" min="-30" max="40" value="8" step="0.5" class="w-full accent-sky-500">
+                    <input type="range" id="growthSlider" min="-30" max="40" value="8" step="0.5" class="w-full accent-sky-400">
                 </div>
 
                 <div>
-                    <div class="flex justify-between mb-1 font-semibold text-slate-700">
+                    <div class="flex justify-between mb-1.5 text-slate-300">
                         <span>EBIT Margin (%)</span>
-                        <span id="marginVal" class="text-sky-600 font-extrabold">20.0%</span>
+                        <span id="marginVal" class="text-sky-400 font-extrabold">20.0%</span>
                     </div>
-                    <input type="range" id="marginSlider" min="-30" max="50" value="20" step="0.5" class="w-full accent-sky-500">
+                    <input type="range" id="marginSlider" min="-30" max="50" value="20" step="0.5" class="w-full accent-sky-400">
                 </div>
 
                 <div>
-                    <div class="flex justify-between mb-1 font-semibold text-slate-700">
-                        <span>WACC Discount Rate (%)</span>
-                        <span id="waccVal" class="text-sky-600 font-extrabold">9.0%</span>
+                    <div class="flex justify-between mb-1.5 text-slate-300">
+                        <span>WACC Rate (%)</span>
+                        <span id="waccVal" class="text-sky-400 font-extrabold">9.0%</span>
                     </div>
-                    <input type="range" id="waccSlider" min="4" max="18" value="9" step="0.25" class="w-full accent-sky-500">
+                    <input type="range" id="waccSlider" min="4" max="18" value="9" step="0.25" class="w-full accent-sky-400">
                 </div>
 
                 <div>
-                    <div class="flex justify-between mb-1 font-semibold text-slate-700">
+                    <div class="flex justify-between mb-1.5 text-slate-300">
                         <span>Terminal Growth (%)</span>
-                        <span id="termVal" class="text-sky-600 font-extrabold">2.5%</span>
+                        <span id="termVal" class="text-sky-400 font-extrabold">2.5%</span>
                     </div>
-                    <input type="range" id="termSlider" min="0.5" max="5" value="2.5" step="0.1" class="w-full accent-sky-500">
+                    <input type="range" id="termSlider" min="0.5" max="5" value="2.5" step="0.1" class="w-full accent-sky-400">
                 </div>
 
                 <div>
-                    <div class="flex justify-between mb-1 font-semibold text-slate-700">
+                    <div class="flex justify-between mb-1.5 text-slate-300">
                         <span>Exit EBITDA Multiple</span>
-                        <span id="exitVal" class="text-sky-600 font-extrabold">12.0x</span>
+                        <span id="exitVal" class="text-sky-400 font-extrabold">12.0x</span>
                     </div>
-                    <input type="range" id="exitSlider" min="4" max="30" value="12" step="0.5" class="w-full accent-sky-500">
+                    <input type="range" id="exitSlider" min="4" max="30" value="12" step="0.5" class="w-full accent-sky-400">
                 </div>
             </div>
 
-            <div class="pt-4 border-t border-slate-200">
-                <button onclick="recalculateModels()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-lg flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-wand-magic-sparkles text-sky-400"></i> Recalculate Dashboard
+            <div class="pt-4 border-t border-slate-800/80">
+                <button onclick="recalculateModels()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black py-3.5 rounded-2xl text-sm transition-all shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-cube"></i> Recalculate 3D Suite
                 </button>
             </div>
         </aside>
 
-        <!-- Main Dashboard Tab Container -->
-        <main class="flex-1 glass-card p-6 flex flex-col space-y-4">
-            <!-- Tabs Navigation Bar -->
-            <div class="flex items-center gap-2 overflow-x-auto pb-3 border-b border-slate-200/80 bg-slate-100/50 p-1.5 rounded-2xl" id="tabContainer">
-                <button class="tab-btn active" onclick="switchTab(1)">1. 📊 3-Statement</button>
-                <button class="tab-btn" onclick="switchTab(2)">2. 🎯 DCF Model</button>
-                <button class="tab-btn" onclick="switchTab(3)">3. 🤝 M&A Merger</button>
-                <button class="tab-btn" onclick="switchTab(4)">4. 🔔 IPO Model</button>
-                <button class="tab-btn" onclick="switchTab(5)">5. 💼 LBO Model</button>
-                <button class="tab-btn" onclick="switchTab(6)">6. 🧩 SOTP Valuation</button>
-                <button class="tab-btn" onclick="switchTab(7)">7. 🏢 Consolidation</button>
-                <button class="tab-btn" onclick="switchTab(8)">8. 📑 Budget & Variance</button>
-                <button class="tab-btn" onclick="switchTab(9)">9. 🔮 Forecasting</button>
-                <button class="tab-btn" onclick="switchTab(10)">10. 📉 Option Pricing</button>
+        <!-- Main 3D Tab Workspace -->
+        <main class="flex-1 card-3d p-6 flex flex-col space-y-5" id="mainWorkspace">
+            <!-- 10 Model Tab Buttons -->
+            <div class="flex items-center gap-2.5 overflow-x-auto pb-3 border-b border-slate-800/80" id="tabContainer">
+                <button class="tab-3d active" onclick="switchTab(1)">1. 📊 3-Statement</button>
+                <button class="tab-3d" onclick="switchTab(2)">2. 🎯 DCF Model</button>
+                <button class="tab-3d" onclick="switchTab(3)">3. 🤝 M&A Merger</button>
+                <button class="tab-3d" onclick="switchTab(4)">4. 🔔 IPO Model</button>
+                <button class="tab-3d" onclick="switchTab(5)">5. 💼 LBO Model</button>
+                <button class="tab-3d" onclick="switchTab(6)">6. 🧩 SOTP Valuation</button>
+                <button class="tab-3d" onclick="switchTab(7)">7. 🏢 Consolidation</button>
+                <button class="tab-3d" onclick="switchTab(8)">8. 📑 Budget & Variance</button>
+                <button class="tab-3d" onclick="switchTab(9)">9. 🔮 Forecasting</button>
+                <button class="tab-3d" onclick="switchTab(10)">10. 📉 Option Pricing</button>
             </div>
 
-            <!-- Tab Content Viewport -->
-            <div class="flex-1 overflow-y-auto pt-2" id="tabContent">
-                <div class="text-center py-16 text-slate-400 text-sm">
-                    <i class="fa-solid fa-spinner fa-spin text-3xl mb-3 text-sky-500"></i>
-                    <p class="font-medium">Initializing 3D Nodes & Calculating 10 Financial Models...</p>
+            <!-- Tab Viewport -->
+            <div class="flex-1 overflow-y-auto" id="tabContent">
+                <div class="text-center py-20 text-slate-400">
+                    <i class="fa-solid fa-cube fa-spin text-4xl mb-3 text-sky-400"></i>
+                    <p class="font-bold text-base">Rendering 3D WebGL Scene & 10 Models...</p>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- 3D Node Particle Background Script (Three.js) -->
+    <!-- 3D WebGL Background Engine & Interactive Perspective Tilt -->
     <script>
-        // --- Three.js Interactive 3D Node Mesh Network ---
-        const canvas = document.getElementById('canvas3d');
+        // --- 1. Three.js 3D WebGL Floating Geometry Scene ---
+        const canvas = document.getElementById('webgl3d');
         const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 40;
+        camera.position.z = 35;
 
-        // Particle nodes
-        const particleCount = 80;
-        const geometry = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-        const velocities = [];
+        // Floating 3D Cubes & Spheres
+        const group3d = new THREE.Group();
+        scene.add(group3d);
 
-        for (let i = 0; i < particleCount; i++) {
-            positions[i * 3] = (Math.random() - 0.5) * 60;
-            positions[i * 3 + 1] = (Math.random() - 0.5) * 60;
-            positions[i * 3 + 2] = (Math.random() - 0.5) * 40;
-            velocities.push({
-                x: (Math.random() - 0.5) * 0.05,
-                y: (Math.random() - 0.5) * 0.05,
-                z: (Math.random() - 0.5) * 0.02
+        const geometryCube = new THREE.BoxGeometry(2, 2, 2);
+        const geometryIco = new THREE.IcosahedronGeometry(2.5, 0);
+
+        for (let i = 0; i < 25; i++) {
+            const matCube = new THREE.MeshPhongMaterial({
+                color: i % 2 === 0 ? 0x38bdf8 : 0x818cf8,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.35
             });
+            const mesh = new THREE.Mesh(i % 2 === 0 ? geometryCube : geometryIco, matCube);
+            mesh.position.set((Math.random() - 0.5) * 50, (Math.random() - 0.5) * 50, (Math.random() - 0.5) * 30);
+            mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+            group3d.add(mesh);
         }
-        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-        const material = new THREE.PointsMaterial({
-            size: 1.2,
-            color: 0x0284c7,
-            transparent: true,
-            opacity: 0.8
+        // Lighting
+        const lightDir = new THREE.DirectionalLight(0x38bdf8, 1.2);
+        lightDir.position.set(20, 20, 20);
+        scene.add(lightDir);
+
+        const lightAmbient = new THREE.AmbientLight(0x4f46e5, 0.6);
+        scene.add(lightAmbient);
+
+        // Mouse Parallax Effect
+        let mouseX = 0, mouseY = 0;
+        window.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+            mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+
+            // 3D Parallax Tilt for Cards
+            const cards = document.querySelectorAll('.card-3d');
+            cards.forEach(card => {
+                const rotX = -mouseY * 4;
+                const rotY = mouseX * 4;
+                card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+            });
         });
-        const particles = new THREE.Points(geometry, material);
-        scene.add(particles);
-
-        // Lines connecting nodes
-        const lineMaterial = new THREE.LineBasicMaterial({ color: 0x818cf8, transparent: true, opacity: 0.15 });
-        const lineGeometry = new THREE.BufferGeometry();
-        const linesMesh = new THREE.LineSegments(lineGeometry, lineMaterial);
-        scene.add(linesMesh);
 
         function animate3D() {
             requestAnimationFrame(animate3D);
-            const pos = geometry.attributes.position.array;
-            
-            for (let i = 0; i < particleCount; i++) {
-                pos[i * 3] += velocities[i].x;
-                pos[i * 3 + 1] += velocities[i].y;
-                pos[i * 3 + 2] += velocities[i].z;
-
-                if (Math.abs(pos[i * 3]) > 30) velocities[i].x *= -1;
-                if (Math.abs(pos[i * 3 + 1]) > 30) velocities[i].y *= -1;
-                if (Math.abs(pos[i * 3 + 2]) > 20) velocities[i].z *= -1;
-            }
-            geometry.attributes.position.needsUpdate = true;
-
-            // Draw line connections
-            const linePositions = [];
-            for (let i = 0; i < particleCount; i++) {
-                for (let j = i + 1; j < particleCount; j++) {
-                    const dx = pos[i * 3] - pos[j * 3];
-                    const dy = pos[i * 3 + 1] - pos[j * 3 + 1];
-                    const dz = pos[i * 3 + 2] - pos[j * 3 + 2];
-                    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                    if (dist < 12) {
-                        linePositions.push(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
-                        linePositions.push(pos[j * 3], pos[j * 3 + 1], pos[j * 3 + 2]);
-                    }
-                }
-            }
-            lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
-
-            particles.rotation.y += 0.0005;
+            group3d.rotation.x += 0.002;
+            group3d.rotation.y += 0.003;
+            camera.position.x += (mouseX * 5 - camera.position.x) * 0.05;
+            camera.position.y += (-mouseY * 5 - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
             renderer.render(scene, camera);
         }
         animate3D();
@@ -291,7 +281,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // --- Dashboard Application Logic ---
+        // --- 2. Financial Dashboard API Integration ---
         let currentTabData = null;
         let activeTab = 1;
 
@@ -344,7 +334,6 @@
                 const data = await res.json();
                 if (data.company_name) {
                     document.getElementById("companyNameLabel").innerText = `${data.company_name} (${data.ticker})`;
-                    document.getElementById("sectorLabel").innerText = data.sector || "General Industry";
                     document.getElementById("priceLabel").innerText = `$${data.current_price.toFixed(2)}`;
                     
                     if (data.ebit_margin !== undefined) {
@@ -366,7 +355,7 @@
 
         function switchTab(num) {
             activeTab = num;
-            document.querySelectorAll(".tab-btn").forEach((btn, i) => {
+            document.querySelectorAll(".tab-3d").forEach((btn, i) => {
                 if (i + 1 === num) btn.classList.add("active");
                 else btn.classList.remove("active");
             });
@@ -380,26 +369,26 @@
             if (num === 1) {
                 const inc = currentTabData.three_statement.income;
                 container.innerHTML = `
-                    <h3 class="text-base font-extrabold text-slate-800 mb-3 flex items-center justify-between">
-                        <span>1. Pro-Forma Linked 3-Statement Financial Model</span>
-                        <span class="text-xs font-semibold text-sky-600 bg-sky-50 px-3 py-1 rounded-full border border-sky-200">All Figures in $ Millions ($M)</span>
+                    <h3 class="text-base font-black text-sky-400 mb-3 flex items-center justify-between">
+                        <span>1. Pro-Forma Linked 3-Statement Model</span>
+                        <span class="text-xs font-bold text-sky-300 bg-sky-500/20 px-3 py-1 rounded-full border border-sky-500/30">Values in $ Millions ($M)</span>
                     </h3>
-                    <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm bg-white">
+                    <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/60">
                         <table class="w-full text-left text-xs border-collapse">
                             <thead>
-                                <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
+                                <tr class="border-b border-slate-800 bg-slate-950/80 text-slate-400 font-extrabold uppercase tracking-wider">
                                     <th class="p-3">Year</th><th class="p-3">Revenue</th><th class="p-3">Gross Profit</th><th class="p-3">EBIT</th><th class="p-3">Interest</th><th class="p-3">Net Income</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100">
+                            <tbody class="divide-y divide-slate-800/60">
                                 ${inc.map(r => `
-                                    <tr class="hover:bg-sky-50/50 transition-colors">
-                                        <td class="p-3 font-bold text-slate-800">${r.Year}</td>
-                                        <td class="p-3 font-semibold text-sky-600">${fmt(r.Revenue)}</td>
-                                        <td class="p-3 text-slate-700">${fmt(r['Gross Profit'])}</td>
-                                        <td class="p-3 font-semibold ${r.EBIT < 0 ? 'text-rose-500' : 'text-slate-800'}">${fmt(r.EBIT)}</td>
-                                        <td class="p-3 text-slate-600">${fmt(r['Interest Expense'])}</td>
-                                        <td class="p-3 font-extrabold ${r['Net Income'] < 0 ? 'text-rose-600' : 'text-emerald-600'}">${fmt(r['Net Income'])}</td>
+                                    <tr class="hover:bg-sky-500/10 transition-colors">
+                                        <td class="p-3 font-bold text-slate-200">${r.Year}</td>
+                                        <td class="p-3 font-extrabold text-sky-400">${fmt(r.Revenue)}</td>
+                                        <td class="p-3 text-slate-300">${fmt(r['Gross Profit'])}</td>
+                                        <td class="p-3 font-bold ${r.EBIT < 0 ? 'text-rose-400' : 'text-slate-200'}">${fmt(r.EBIT)}</td>
+                                        <td class="p-3 text-slate-400">${fmt(r['Interest Expense'])}</td>
+                                        <td class="p-3 font-black ${r['Net Income'] < 0 ? 'text-rose-500' : 'text-emerald-400'}">${fmt(r['Net Income'])}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -409,45 +398,72 @@
             } else if (num === 2) {
                 const dcf = currentTabData.dcf;
                 container.innerHTML = `
-                    <h3 class="text-base font-extrabold text-slate-800 mb-3">2. Discounted Cash Flow (DCF) Valuation</h3>
+                    <h3 class="text-base font-black text-sky-400 mb-3">2. Discounted Cash Flow (DCF) & 3D Sensitivity Surface</h3>
                     <div class="grid grid-cols-4 gap-4 mb-4">
-                        <div class="glass-card p-4 text-center border-l-4 border-sky-500"><div class="text-xs text-slate-500 font-semibold">DCF Fair Share Value</div><div class="text-2xl font-black text-sky-600 mt-1">$${dcf.blended_price.toFixed(2)}</div></div>
-                        <div class="glass-card p-4 text-center border-l-4 border-emerald-500"><div class="text-xs text-slate-500 font-semibold">Margin of Safety</div><div class="text-2xl font-black text-emerald-600 mt-1">${dcf.margin_of_safety_pct.toFixed(1)}%</div></div>
-                        <div class="glass-card p-4 text-center border-l-4 border-indigo-500"><div class="text-xs text-slate-500 font-semibold">Valuation Recommendation</div><div class="text-sm font-bold text-indigo-700 mt-2">${dcf.status}</div></div>
-                        <div class="glass-card p-4 text-center border-l-4 border-purple-500"><div class="text-xs text-slate-500 font-semibold">Altman Z-Score</div><div class="text-2xl font-black text-purple-600 mt-1">${currentTabData.health.z_score.toFixed(2)}</div></div>
+                        <div class="card-3d p-4 text-center border-l-4 border-sky-400"><div class="text-xs text-slate-400 font-bold">DCF Fair Value</div><div class="text-2xl font-black text-sky-400 mt-1">$${dcf.blended_price.toFixed(2)}</div></div>
+                        <div class="card-3d p-4 text-center border-l-4 border-emerald-400"><div class="text-xs text-slate-400 font-bold">Margin of Safety</div><div class="text-2xl font-black text-emerald-400 mt-1">${dcf.margin_of_safety_pct.toFixed(1)}%</div></div>
+                        <div class="card-3d p-4 text-center border-l-4 border-purple-400"><div class="text-xs text-slate-400 font-bold">Recommendation</div><div class="text-sm font-black text-purple-400 mt-2">${dcf.status}</div></div>
+                        <div class="card-3d p-4 text-center border-l-4 border-indigo-400"><div class="text-xs text-slate-400 font-bold">Altman Z-Score</div><div class="text-2xl font-black text-indigo-400 mt-1">${currentTabData.health.z_score.toFixed(2)}</div></div>
                     </div>
+                    <div id="plotly3dChart" class="w-full h-80 rounded-2xl overflow-hidden"></div>
                 `;
+
+                // Render 3D Surface Chart for DCF Valuation
+                setTimeout(() => {
+                    const zData = [
+                        [dcf.blended_price*0.7, dcf.blended_price*0.8, dcf.blended_price*0.9],
+                        [dcf.blended_price*0.9, dcf.blended_price, dcf.blended_price*1.1],
+                        [dcf.blended_price*1.1, dcf.blended_price*1.2, dcf.blended_price*1.3]
+                    ];
+                    const data3d = [{
+                        z: zData,
+                        x: ['g=1.5%', 'g=2.5%', 'g=3.5%'],
+                        y: ['WACC=7%', 'WACC=9%', 'WACC=11%'],
+                        type: 'surface',
+                        colorscale: 'Viridis'
+                    }];
+                    const layout3d = {
+                        title: 'Interactive 3D Valuation Surface (WACC vs. Growth vs. Share Price)',
+                        autosize: true,
+                        margin: { l: 0, r: 0, b: 0, t: 30 },
+                        paper_bgcolor: 'rgba(0,0,0,0)',
+                        plot_bgcolor: 'rgba(0,0,0,0)',
+                        font: { color: '#9ca3af' }
+                    };
+                    Plotly.newPlot('plotly3dChart', data3d, layout3d);
+                }, 100);
+
             } else if (num === 3) {
                 const ma = currentTabData.ma;
                 container.innerHTML = `
-                    <h3 class="text-base font-extrabold text-slate-800 mb-3">3. M&A Merger Accretion / Dilution Model</h3>
-                    <div class="glass-card p-5 max-w-xl space-y-3 bg-white">
-                        <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500 text-xs">Equity Purchase Price:</span><span class="font-extrabold text-sky-600">${fmt(ma.equity_purchase_price)}</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500 text-xs">Pro-Forma Combined EPS:</span><span class="font-extrabold text-emerald-600">$${ma.pro_forma_eps.toFixed(2)}</span></div>
-                        <div class="flex justify-between"><span class="text-slate-500 text-xs">EPS Accretion / Dilution:</span><span class="font-extrabold text-emerald-600">+$${ma.eps_change.toFixed(2)} (+${ma.eps_change_pct.toFixed(2)}%)</span></div>
+                    <h3 class="text-base font-black text-sky-400 mb-3">3. M&A Accretion / Dilution Model</h3>
+                    <div class="card-3d p-6 max-w-xl space-y-4">
+                        <div class="flex justify-between border-b border-slate-800 pb-2"><span class="text-slate-400 text-xs">Equity Purchase Price:</span><span class="font-black text-sky-400">${fmt(ma.equity_purchase_price)}</span></div>
+                        <div class="flex justify-between border-b border-slate-800 pb-2"><span class="text-slate-400 text-xs">Pro-Forma Combined EPS:</span><span class="font-black text-emerald-400">$${ma.pro_forma_eps.toFixed(2)}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400 text-xs">EPS Accretion / Dilution:</span><span class="font-black text-emerald-400">+$${ma.eps_change.toFixed(2)} (+${ma.eps_change_pct.toFixed(2)}%)</span></div>
                     </div>
                 `;
             } else if (num === 5) {
                 const lbo = currentTabData.lbo;
                 container.innerHTML = `
-                    <h3 class="text-base font-extrabold text-slate-800 mb-3">5. Leveraged Buyout (LBO) Model</h3>
+                    <h3 class="text-base font-black text-sky-400 mb-3">5. Leveraged Buyout (LBO) Model</h3>
                     <div class="grid grid-cols-3 gap-4 mb-4">
-                        <div class="glass-card p-4 text-center"><div class="text-xs text-slate-500">Entry EV</div><div class="text-2xl font-black text-sky-600">${fmt(lbo.entry_ev)}</div></div>
-                        <div class="glass-card p-4 text-center"><div class="text-xs text-slate-500">Sponsor 5-Yr IRR</div><div class="text-2xl font-black text-emerald-600">${lbo.sponsor_irr_pct.toFixed(1)}%</div></div>
-                        <div class="glass-card p-4 text-center"><div class="text-xs text-slate-500">MOIC</div><div class="text-2xl font-black text-indigo-600">${lbo.moic.toFixed(2)}x</div></div>
+                        <div class="card-3d p-4 text-center"><div class="text-xs text-slate-400 font-bold">Entry EV</div><div class="text-2xl font-black text-sky-400">${fmt(lbo.entry_ev)}</div></div>
+                        <div class="card-3d p-4 text-center"><div class="text-xs text-slate-400 font-bold">Sponsor 5-Yr IRR</div><div class="text-2xl font-black text-emerald-400">${lbo.sponsor_irr_pct.toFixed(1)}%</div></div>
+                        <div class="card-3d p-4 text-center"><div class="text-xs text-slate-400 font-bold">MOIC</div><div class="text-2xl font-black text-purple-400">${lbo.moic.toFixed(2)}x</div></div>
                     </div>
                 `;
             } else if (num === 10) {
                 const opt = currentTabData.option_pricing;
                 container.innerHTML = `
-                    <h3 class="text-base font-extrabold text-slate-800 mb-3">10. Black-Scholes & Binomial Option Pricing</h3>
+                    <h3 class="text-base font-black text-sky-400 mb-3">10. Black-Scholes & Binomial Option Pricing</h3>
                     <div class="grid grid-cols-2 gap-4 max-w-xl">
-                        <div class="glass-card p-5 text-center bg-white"><div class="text-xs text-slate-500">Call Option Price</div><div class="text-3xl font-black text-sky-600">$${opt.call_price.toFixed(2)}</div></div>
-                        <div class="glass-card p-5 text-center bg-white"><div class="text-xs text-slate-500">Put Option Price</div><div class="text-3xl font-black text-purple-600">$${opt.put_price.toFixed(2)}</div></div>
+                        <div class="card-3d p-6 text-center"><div class="text-xs text-slate-400 font-bold">Call Option Price</div><div class="text-3xl font-black text-sky-400 mt-1">$${opt.call_price.toFixed(2)}</div></div>
+                        <div class="card-3d p-6 text-center"><div class="text-xs text-slate-400 font-bold">Put Option Price</div><div class="text-3xl font-black text-purple-400 mt-1">$${opt.put_price.toFixed(2)}</div></div>
                     </div>
                 `;
             } else {
-                container.innerHTML = `<h3 class="text-base font-extrabold text-slate-800 mb-3">Model ${num} Details</h3><p class="text-slate-500 text-sm">Financial engine computed cleanly in $ Millions.</p>`;
+                container.innerHTML = `<h3 class="text-base font-black text-sky-400 mb-3">Model ${num} Workspace</h3><p class="text-slate-400 text-sm">3D WebGL engine computed values cleanly in $ Millions.</p>`;
             }
         }
 

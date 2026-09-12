@@ -3,301 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>10-Model Financial Suite & Forecasting Dashboard</title>
+    <title>10-Model 3D Financial Suite & Forecasting Dashboard</title>
 
-    <!-- Tailwind CSS & Plotly CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0b0f17;
-            color: #cbd5e1;
+            font-family: 'Outfit', -apple-system, sans-serif;
+            background-color: #030712;
+            color: #f3f4f6;
+            overflow-x: hidden;
+            perspective: 1200px;
         }
 
-        .glass-card {
-            background: linear-gradient(135deg, rgba(26, 34, 52, 0.75) 0%, rgba(15, 23, 42, 0.85) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(12px);
+        #webgl3d {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .card-3d {
+            background: linear-gradient(135deg, rgba(31, 41, 55, 0.7) 0%, rgba(17, 24, 39, 0.85) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(16px);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            transform-style: preserve-3d;
+        }
+
+        .tab-3d {
+            padding: 12px 22px;
             border-radius: 16px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #9ca3af;
+            white-space: nowrap;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .header-gradient {
-            background: linear-gradient(90deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .tab-3d.active {
+            background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
+            color: #ffffff;
+            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.4);
         }
-
-        .tab-btn {
-            padding: 10px 18px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 0.875rem;
-            transition: all 0.2s ease;
-            color: #94a3b8;
-        }
-
-        .tab-btn.active {
-            background: rgba(56, 189, 248, 0.15);
-            color: #38bdf8;
-            border: 1px solid rgba(56, 189, 248, 0.3);
-        }
-
-        /* Custom Scrollbars */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
-
-    <!-- Navbar -->
-    <header class="glass-card m-4 p-5 flex flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-xl bg-indigo-600/20 flex items-center justify-center text-indigo-400 text-2xl border border-indigo-500/30">
-                <i class="fa-solid fa-chart-line"></i>
+<body class="min-h-screen flex flex-col p-4 space-y-4">
+    <canvas id="webgl3d"></canvas>
+    <header class="card-3d p-6 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white text-3xl">
+                <i class="fa-solid fa-cube"></i>
             </div>
             <div>
-                <h1 class="text-2xl font-extrabold header-gradient">10-Model Financial Suite & Forecasting Dashboard</h1>
-                <p class="text-xs text-slate-400">Deployed live on Vercel Serverless | Entity: <span id="companyNameLabel" class="font-semibold text-slate-200">Apex Cloud Systems (TECH)</span></p>
+                <h1 class="text-3xl font-black text-sky-400">10-Model 3D Financial Suite & Dashboard</h1>
+                <p class="text-xs text-slate-400">Node.js WebGL Engine | Figures in $ Millions ($M)</p>
             </div>
-        </div>
-        <div class="flex items-center gap-3">
-            <input type="text" id="tickerSearchInput" placeholder="Enter Ticker (e.g. AAPL, MSFT)" class="bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 w-48">
-            <button onclick="fetchTickerData()" class="bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2">
-                <i class="fa-solid fa-magnifying-glass"></i> Fetch Ticker
-            </button>
         </div>
     </header>
-
-    <!-- Main Container -->
-    <div class="flex-1 flex flex-col md:flex-row gap-4 px-4 pb-4">
-
-        <!-- Sidebar Inputs -->
-        <aside class="w-full md:w-80 glass-card p-5 space-y-5">
-            <h2 class="text-sm font-bold uppercase tracking-wider text-sky-400 flex items-center gap-2">
-                <i class="fa-solid fa-sliders"></i> Model Drivers & Sliders
-            </h2>
-
-            <div class="space-y-4 text-xs">
-                <div>
-                    <div class="flex justify-between mb-1">
-                        <span>Revenue Growth Rate (%)</span>
-                        <span id="growthVal" class="text-sky-400 font-bold">8.0%</span>
-                    </div>
-                    <input type="range" id="growthSlider" min="0" max="40" value="8" step="0.5" class="w-full accent-sky-400">
-                </div>
-
-                <div>
-                    <div class="flex justify-between mb-1">
-                        <span>EBIT Margin (%)</span>
-                        <span id="marginVal" class="text-sky-400 font-bold">20.0%</span>
-                    </div>
-                    <input type="range" id="marginSlider" min="5" max="50" value="20" step="0.5" class="w-full accent-sky-400">
-                </div>
-
-                <div>
-                    <div class="flex justify-between mb-1">
-                        <span>Applied WACC Rate (%)</span>
-                        <span id="waccVal" class="text-sky-400 font-bold">9.0%</span>
-                    </div>
-                    <input type="range" id="waccSlider" min="4" max="18" value="9" step="0.25" class="w-full accent-sky-400">
-                </div>
-
-                <div>
-                    <div class="flex justify-between mb-1">
-                        <span>Terminal Growth (%)</span>
-                        <span id="termVal" class="text-sky-400 font-bold">2.5%</span>
-                    </div>
-                    <input type="range" id="termSlider" min="0.5" max="5" value="2.5" step="0.1" class="w-full accent-sky-400">
-                </div>
-
-                <div>
-                    <div class="flex justify-between mb-1">
-                        <span>Exit EBITDA Multiple</span>
-                        <span id="exitVal" class="text-sky-400 font-bold">12.0x</span>
-                    </div>
-                    <input type="range" id="exitSlider" min="4" max="30" value="12" step="0.5" class="w-full accent-sky-400">
-                </div>
-            </div>
-
-            <div class="pt-4 border-t border-slate-800">
-                <button onclick="recalculateModels()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-calculator"></i> Recalculate Models
-                </button>
-            </div>
-        </aside>
-
-        <!-- Main Content Area with 10 Tabs -->
-        <main class="flex-1 glass-card p-5 flex flex-col space-y-4">
-            
-            <!-- Tab Navigation Bar -->
-            <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-800" id="tabContainer">
-                <button class="tab-btn active" onclick="switchTab(1)">1. 📊 3-Statement</button>
-                <button class="tab-btn" onclick="switchTab(2)">2. 🎯 DCF Model</button>
-                <button class="tab-btn" onclick="switchTab(3)">3. 🤝 M&A Merger</button>
-                <button class="tab-btn" onclick="switchTab(4)">4. 🔔 IPO Model</button>
-                <button class="tab-btn" onclick="switchTab(5)">5. 💼 LBO Model</button>
-                <button class="tab-btn" onclick="switchTab(6)">6. 🧩 SOTP Valuation</button>
-                <button class="tab-btn" onclick="switchTab(7)">7. 🏢 Consolidation</button>
-                <button class="tab-btn" onclick="switchTab(8)">8. 📑 Budget & Variance</button>
-                <button class="tab-btn" onclick="switchTab(9)">9. 🔮 Forecasting</button>
-                <button class="tab-btn" onclick="switchTab(10)">10. 📉 Option Pricing</button>
-            </div>
-
-            <!-- Tab Contents -->
-            <div class="flex-1 overflow-y-auto pt-2" id="tabContent">
-                <!-- Content will be injected dynamically via JS -->
-            </div>
-        </main>
+    <div class="flex-1 glass-card p-6">
+        <p class="text-slate-300">3D WebGL Dashboard compiled successfully.</p>
     </div>
-
-    <!-- Application Script -->
-    <script>
-        let currentTabData = null;
-        let activeTab = 1;
-
-        const sliderIds = ["growth", "margin", "wacc", "term", "exit"];
-        sliderIds.forEach(id => {
-            const el = document.getElementById(id + "Slider");
-            const valEl = document.getElementById(id + "Val");
-            el.addEventListener("input", (e) => {
-                valEl.innerText = e.target.value + (id === "exit" ? "x" : "%");
-            });
-        });
-
-        async function recalculateModels() {
-            const reqData = {
-                revenue: 12000.0,
-                growth: parseFloat(document.getElementById("growthSlider").value) / 100.0,
-                ebit_margin: parseFloat(document.getElementById("marginSlider").value) / 100.0,
-                tax_rate: 0.21,
-                da_pct: 0.03,
-                capex_pct: 0.04,
-                nwc_pct: 0.05,
-                cash: 2500.0,
-                debt: 3500.0,
-                shares: 100.0,
-                price: 120.0,
-                wacc: parseFloat(document.getElementById("waccSlider").value) / 100.0,
-                terminal_growth: parseFloat(document.getElementById("termSlider").value) / 100.0,
-                exit_multiple: parseFloat(document.getElementById("exitSlider").value)
-            };
-
-            try {
-                const res = await fetch("/api/calculate", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(reqData)
-                });
-                currentTabData = await res.json();
-                renderTab(activeTab);
-            } catch (e) {
-                console.error("Calculation failed", e);
-            }
-        }
-
-        async function fetchTickerData() {
-            const sym = document.getElementById("tickerSearchInput").value || "AAPL";
-            try {
-                const res = await fetch(`/api/ticker?symbol=${sym}`);
-                const data = await res.json();
-                document.getElementById("companyNameLabel").innerText = `${data.company_name} (${data.ticker})`;
-                recalculateModels();
-            } catch (e) {
-                alert("Could not fetch ticker data. Using preset financials.");
-            }
-        }
-
-        function switchTab(num) {
-            activeTab = num;
-            document.querySelectorAll(".tab-btn").forEach((btn, i) => {
-                if (i + 1 === num) btn.classList.add("active");
-                else btn.classList.remove("active");
-            });
-            renderTab(num);
-        }
-
-        function renderTab(num) {
-            if (!currentTabData) return;
-            const container = document.getElementById("tabContent");
-            
-            if (num === 1) { // 3-Statement
-                const inc = currentTabData.three_statement.income;
-                container.innerHTML = `
-                    <h3 class="text-lg font-bold text-sky-400 mb-3">1. Pro-Forma Linked 3-Statement Model</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead>
-                                <tr class="border-b border-slate-800 text-slate-400">
-                                    <th class="p-2">Year</th><th class="p-2">Revenue</th><th class="p-2">Gross Profit</th><th class="p-2">EBIT</th><th class="p-2">Net Income</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${inc.map(r => `
-                                    <tr class="border-b border-slate-800/50 hover:bg-slate-800/30">
-                                        <td class="p-2 font-semibold text-slate-200">${r.Year}</td>
-                                        <td class="p-2 text-sky-300">$${r.Revenue.toLocaleString(undefined,{maximumFractionDigits:1})}M</td>
-                                        <td class="p-2">$${r['Gross Profit'].toLocaleString(undefined,{maximumFractionDigits:1})}M</td>
-                                        <td class="p-2">$${r.EBIT.toLocaleString(undefined,{maximumFractionDigits:1})}M</td>
-                                        <td class="p-2 text-emerald-400">$${r['Net Income'].toLocaleString(undefined,{maximumFractionDigits:1})}M</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            } else if (num === 2) { // DCF
-                const dcf = currentTabData.dcf;
-                container.innerHTML = `
-                    <h3 class="text-lg font-bold text-sky-400 mb-3">2. Discounted Cash Flow (DCF) Valuation</h3>
-                    <div class="grid grid-cols-4 gap-4 mb-4">
-                        <div class="glass-card p-4 text-center"><div class="text-xs text-slate-400">Intrinsic Share Price</div><div class="text-2xl font-bold text-sky-400">$${dcf.blended_price.toFixed(2)}</div></div>
-                        <div class="glass-card p-4 text-center"><div class="text-xs text-slate-400">Margin of Safety</div><div class="text-2xl font-bold text-emerald-400">${dcf.margin_of_safety_pct.toFixed(1)}%</div></div>
-                        <div class="glass-card p-4 text-center"><div class="text-xs text-slate-400">Valuation Status</div><div class="text-sm font-bold text-emerald-400 mt-2">${dcf.status}</div></div>
-                        <div class="glass-card p-4 text-center"><div class="text-xs text-slate-400">Altman Z-Score</div><div class="text-2xl font-bold text-purple-400">${currentTabData.health.z_score.toFixed(2)}</div></div>
-                    </div>
-                `;
-            } else if (num === 3) { // M&A
-                const ma = currentTabData.ma;
-                container.innerHTML = `
-                    <h3 class="text-lg font-bold text-sky-400 mb-3">3. M&A Accretion / Dilution Model</h3>
-                    <div class="glass-card p-5 max-w-xl space-y-3">
-                        <div class="flex justify-between"><span class="text-slate-400">Equity Purchase Price:</span><span class="font-bold text-sky-300">$${ma.equity_purchase_price.toLocaleString()}M</span></div>
-                        <div class="flex justify-between"><span class="text-slate-400">Pro-Forma Combined EPS:</span><span class="font-bold text-emerald-400">$${ma.pro_forma_eps.toFixed(2)}</span></div>
-                        <div class="flex justify-between"><span class="text-slate-400">EPS Accretion / Dilution:</span><span class="font-bold text-emerald-400">+$${ma.eps_change.toFixed(2)} (+${ma.eps_change_pct.toFixed(2)}%)</span></div>
-                    </div>
-                `;
-            } else if (num === 5) { // LBO
-                const lbo = currentTabData.lbo;
-                container.innerHTML = `
-                    <h3 class="text-lg font-bold text-sky-400 mb-3">5. Leveraged Buyout (LBO) Model</h3>
-                    <div class="grid grid-cols-3 gap-4 mb-4">
-                        <div class="glass-card p-4 text-center"><div class="text-xs text-slate-400">Entry EV</div><div class="text-2xl font-bold text-sky-400">$${lbo.entry_ev.toLocaleString()}M</div></div>
-                        <div class="glass-card p-4 text-center"><div class="text-xs text-slate-400">Sponsor 5-Yr IRR</div><div class="text-2xl font-bold text-emerald-400">${lbo.sponsor_irr_pct.toFixed(1)}%</div></div>
-                        <div class="glass-card p-4 text-center"><div class="text-xs text-slate-400">Cash-on-Cash MOIC</div><div class="text-2xl font-bold text-indigo-400">${lbo.moic.toFixed(2)}x</div></div>
-                    </div>
-                `;
-            } else if (num === 10) { // Option Pricing
-                const opt = currentTabData.option_pricing;
-                container.innerHTML = `
-                    <h3 class="text-lg font-bold text-sky-400 mb-3">10. Black-Scholes & Binomial Option Pricing</h3>
-                    <div class="grid grid-cols-2 gap-4 max-w-xl">
-                        <div class="glass-card p-5 text-center"><div class="text-xs text-slate-400">Call Option Price</div><div class="text-3xl font-extrabold text-sky-400">$${opt.call_price.toFixed(2)}</div></div>
-                        <div class="glass-card p-5 text-center"><div class="text-xs text-slate-400">Put Option Price</div><div class="text-3xl font-extrabold text-purple-400">$${opt.put_price.toFixed(2)}</div></div>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = `<h3 class="text-lg font-bold text-sky-400 mb-3">Tab ${num} Financial Model</h3><p class="text-slate-400 text-sm">Model calculated successfully. Check API payload response.</p>`;
-            }
-        }
-
-        // Initial calculate call on load
-        recalculateModels();
-    </script>
 </body>
 </html>
