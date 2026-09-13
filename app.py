@@ -222,19 +222,34 @@ COMPANY_DROPDOWN = {
     "Netflix, Inc. (NFLX)": "NFLX",
     "Palantir Technologies (PLTR)": "PLTR",
     "Advanced Micro Devices (AMD)": "AMD",
+    "Uber Technologies (UBER)": "UBER",
+    "Costco Wholesale (COST)": "COST",
+    "Walt Disney Company (DIS)": "DIS",
+    "Intel Corporation (INTC)": "INTC",
     "JPMorgan Chase & Co. (JPM)": "JPM",
     "Bank of America Corp (BAC)": "BAC",
+    "Visa Inc. (V)": "V",
+    "Mastercard Inc. (MA)": "MA",
+    "Coca-Cola Co. (KO)": "KO",
+    "PepsiCo, Inc. (PEP)": "PEP",
+    "Starbucks Corp. (SBUX)": "SBUX",
+    "NIKE, Inc. (NKE)": "NKE",
     "Infosys Limited (INFY)": "INFY",
-    "Reliance Industries (RELIANCE.NS)": "RELIANCE.NS"
+    "Reliance Industries (RELIANCE.NS)": "RELIANCE.NS",
+    "Tata Consultancy Services (TCS.NS)": "TCS.NS",
+    "Tata Motors (TATAMOTORS.NS)": "TATAMOTORS.NS"
 }
 
 if input_mode == "🔍 Live Public Ticker":
-    selected_company_label = st.sidebar.selectbox("Select Company or Search", list(COMPANY_DROPDOWN.keys()), index=0)
-    ticker = COMPANY_DROPDOWN[selected_company_label]
+    selected_company_label = st.sidebar.selectbox("Select Preset Ticker", list(COMPANY_DROPDOWN.keys()), index=0)
+    custom_ticker_input = st.sidebar.text_input("🔎 Or Search / Type Any Ticker Symbol", value="", placeholder="e.g. GOOGL, AMZN, TATAMOTORS.NS")
+    
+    ticker_to_fetch = custom_ticker_input.strip().upper() if custom_ticker_input.strip() else COMPANY_DROPDOWN[selected_company_label]
+    
     if st.sidebar.button("Fetch Live Financials"):
-        st.session_state["company_data"] = fetch_financial_data(ticker)
-        st.session_state["current_ticker_loaded"] = ticker
-        st.sidebar.success(f"Loaded {ticker}")
+        st.session_state["company_data"] = fetch_financial_data(ticker_to_fetch)
+        st.session_state["current_ticker_loaded"] = ticker_to_fetch
+        st.sidebar.success(f"Successfully Loaded Live Financials for {ticker_to_fetch}")
 
 elif input_mode == "📄 Upload 5-Yr Report (PDF/CSV)":
     uploaded_file = st.sidebar.file_uploader("Upload Report", type=["pdf", "csv"])
