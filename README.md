@@ -1,10 +1,11 @@
-# 📈 10-Model Financial Suite & Forecasting Dashboard
+# 📈 FinPulse PRO — Financial Modeling Suite & Institutional Valuation Dashboard
 
+[![Live Web App](https://img.shields.io/badge/🌐_LIVE_WEB_APP-CLICK_HERE_TO_VISIT-00C853?style=for-the-badge&logo=googlechrome)](https://quashanshayan123ansari.github.io/Financial-modelling/)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/quashanshayan123ansari/Financial-modelling)
-[![Live Web Dashboard](https://img.shields.io/badge/Live-Web_Dashboard-emerald?logo=googlechrome)](https://quashanshayan123ansari.github.io/Financial-modelling/)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
 
-> **Live Interactive Dashboard**: Access the web suite directly via **[GitHub Pages Live Link](https://quashanshayan123ansari.github.io/Financial-modelling/)** or launch locally via Streamlit.
+> 🚀 **DIRECT LIVE SITE LINK**: 👉 **[https://quashanshayan123ansari.github.io/Financial-modelling/](https://quashanshayan123ansari.github.io/Financial-modelling/)**
+> 
+> Access the institutional financial modeling suite, DCF engines, dynamic multi-sheet Excel exports, and pre-built US equities directory instantly in your browser!
 
 ---
 
