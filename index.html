@@ -1059,12 +1059,13 @@
             const cleanTitle = title.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
             const filename = `${co.ticker}_${cleanTitle}.csv`;
 
-            const blob = new Blob([csv.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+            const csvContent = csv.join("\r\n");
+            const dataUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
+
             const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
+            link.href = dataUri;
+            link.download = filename;
             link.setAttribute("download", filename);
-            link.style.visibility = "hidden";
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -1076,7 +1077,7 @@
 
         function fmt(n) { return `$${n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}M`; }
 
-        // Real Multi-Tab Excel Workbook Generation using SheetJS
+        // Real Multi-Tab Excel Workbook Generation using SheetJS with Data URI
         function downloadExcelPackage() {
             const co = US_COMPANIES[activeTicker] || { ticker: "AAPL", name: "Apple Inc.", sector: "Technology", price: 224.23, dcf: 248.50, revenue: 385600.0, ebit: 123400.0, net_income: 100900.0, cash: 61600.0, debt: 104600.0 };
             
@@ -1156,7 +1157,18 @@
             XLSX.utils.book_append_sheet(wb, wsDcf, "4. DCF Valuation");
 
             const filename = `${co.ticker}_Financial_Model_Package.xlsx`;
-            XLSX.writeFile(wb, filename);
+
+            // Convert to Base64 Data URI to force exact filename in Chrome
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+            const dataUri = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + wbout;
+
+            const link = document.createElement("a");
+            link.href = dataUri;
+            link.download = filename;
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         document.addEventListener("DOMContentLoaded", () => {
